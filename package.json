@@ -1204,7 +1204,7 @@
     "express": "^5.2.1",
     "file-type": "^21.3.1",
     "grammy": "^1.41.1",
-    "hono": "4.12.7",
+    "hono": "4.12.14",
     "https-proxy-agent": "^8.0.0",
     "ipaddr.js": "^2.3.0",
     "jiti": "^2.6.1",
@@ -1261,12 +1261,12 @@
   "pnpm": {
     "minimumReleaseAge": 2880,
     "overrides": {
-      "hono": "4.12.7",
+      "hono": "4.12.14",
       "@hono/node-server": "1.19.10",
       "fast-xml-parser": "5.3.8",
       "request": "npm:@cypress/request@3.0.10",
       "request-promise": "npm:@cypress/request-promise@5.0.0",
-      "file-type": "21.3.1",
+      "file-type": "21.3.2",
       "form-data": "2.5.4",
       "minimatch": "10.2.4",
       "qs": "6.14.2",
