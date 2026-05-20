@@ -156,7 +156,7 @@ export function createZWebStreamFn(cookieOrJson: string): StreamFn {
         const reader = responseStream.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
-
+        let accumulatedContent = "";
         const indexMap = new Map<string, number>();
         let nextIndex = 0;
         const contentParts: (TextContent | ThinkingContent | ToolCall)[] = [];
@@ -352,7 +352,7 @@ export function createZWebStreamFn(cookieOrJson: string): StreamFn {
                   } catch (e) {
                     part.arguments = { raw: argStr };
                     console.error(
-                      `[Qwen Stream] Failed to parse JSON for tool call ${currentToolName}:`,
+                      `[GLMWebStream] Failed to parse JSON for tool call ${currentToolName}:`,
                       argStr,
                       "\nError:",
                       e,
@@ -449,7 +449,14 @@ export function createZWebStreamFn(cookieOrJson: string): StreamFn {
             }
 
             if (typeof delta === "string" && delta) {
-              pushDelta(delta);
+              // GLM sends full accumulated content in each event — only emit the new portion
+              if (delta.length > accumulatedContent.length) {
+                const newDelta = delta.slice(accumulatedContent.length);
+                accumulatedContent = delta;
+                if (newDelta) {
+                  pushDelta(newDelta);
+                }
+              }
             }
           } catch {
             // Ignore parse errors
@@ -518,7 +525,7 @@ export function createZWebStreamFn(cookieOrJson: string): StreamFn {
             },
             timestamp: Date.now(),
           },
-        } as any);
+        } as unknown as Parameters<typeof stream.push>[0]);
       } finally {
         stream.end();
       }

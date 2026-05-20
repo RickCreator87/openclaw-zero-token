@@ -415,6 +415,29 @@ function resolvePluginDynamicModelWithRegistry(params: {
   });
 }
 
+/** Known web provider IDs — handled by zero-token bridge, not upstream config. */
+const WEB_PROVIDER_IDS = new Set([
+  "deepseek-web",
+  "claude-web",
+  "chatgpt-web",
+  "doubao-web",
+  "gemini-web",
+  "glm-web",
+  "glm-intl-web",
+  "grok-web",
+  "kimi-web",
+  "perplexity-web",
+  "qwen-web",
+  "qwen-cn-web",
+  "xiaomimo-web",
+]);
+
+function isWebProvider(providerId: string): boolean {
+  return (
+    WEB_PROVIDER_IDS.has(providerId) || (providerId.endsWith("-web") && !providerId.includes(" "))
+  );
+}
+
 function resolveConfiguredFallbackModel(params: {
   provider: string;
   modelId: string;
@@ -431,16 +454,20 @@ function resolveConfiguredFallbackModel(params: {
   const modelHeaders = sanitizeModelHeaders(configuredModel?.headers, {
     stripSecretRefMarkers: true,
   });
-  if (!providerConfig && !modelId.startsWith("mock-")) {
+  if (!providerConfig && !modelId.startsWith("mock-") && !isWebProvider(provider)) {
     return undefined;
   }
   const fallbackTransport = resolveProviderTransport({
     provider,
-    api: providerConfig?.api ?? "openai-responses",
+    api: providerConfig?.api ?? (isWebProvider(provider) ? (provider as Api) : "openai-responses"),
     baseUrl: providerConfig?.baseUrl,
     cfg,
     runtimeHooks,
   });
+  const resolvedApi =
+    isWebProvider(provider) && !fallbackTransport.api
+      ? (provider as Api)
+      : (fallbackTransport.api ?? "openai-responses");
   return normalizeResolvedModel({
     provider,
     cfg,
@@ -448,7 +475,7 @@ function resolveConfiguredFallbackModel(params: {
     model: {
       id: modelId,
       name: modelId,
-      api: fallbackTransport.api ?? "openai-responses",
+      api: resolvedApi,
       provider,
       baseUrl: fallbackTransport.baseUrl,
       reasoning: configuredModel?.reasoning ?? false,

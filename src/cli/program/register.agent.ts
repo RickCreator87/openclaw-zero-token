@@ -27,6 +27,11 @@ export function registerAgentCommands(program: Command, args: { agentChannelOpti
     .option("-t, --to <number>", "Recipient number in E.164 used to derive the session key")
     .option("--session-id <id>", "Use an explicit session id")
     .option("--agent <id>", "Agent id (overrides routing bindings)")
+    .option(
+      "--model <ref>",
+      "Model for this turn only (e.g. qwen-cn-web/Qwen3.5-Plus); requires gateway client with operator.admin",
+    )
+    .option("--provider <id>", "Provider id when --model is only the model id (optional)")
     .option("--thinking <level>", "Thinking level: off | minimal | low | medium | high | xhigh")
     .option("--verbose <on|off>", "Persist agent verbose level for the session")
     .option(
@@ -67,6 +72,10 @@ ${formatHelpExamples([
   [
     'openclaw agent --agent ops --message "Generate report" --deliver --reply-channel slack --reply-to "#reports"',
     "Send reply to a different channel/target.",
+  ],
+  [
+    'openclaw agent --agent main --model qwen-cn-web/Qwen3.5-Plus --message "ping"',
+    "One-shot model override for this turn (requires operator.admin on the gateway token).",
   ],
 ])}
 

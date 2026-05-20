@@ -153,7 +153,7 @@ ktlint {
 }
 
 dependencies {
-    val composeBom = platform("androidx.compose:compose-bom:2026.03.00")
+    val composeBom = platform("androidx.compose:compose-bom:2026.03.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)
 
@@ -182,11 +182,11 @@ dependencies {
     implementation("androidx.exifinterface:exifinterface:1.4.2")
     implementation("com.squareup.okhttp3:okhttp:5.3.2")
     implementation("org.bouncycastle:bcprov-jdk18on:1.83")
-    implementation("org.commonmark:commonmark:0.27.1")
-    implementation("org.commonmark:commonmark-ext-autolink:0.27.1")
-    implementation("org.commonmark:commonmark-ext-gfm-strikethrough:0.27.1")
-    implementation("org.commonmark:commonmark-ext-gfm-tables:0.27.1")
-    implementation("org.commonmark:commonmark-ext-task-list-items:0.27.1")
+    implementation("org.commonmark:commonmark:0.28.0")
+    implementation("org.commonmark:commonmark-ext-autolink:0.28.0")
+    implementation("org.commonmark:commonmark-ext-gfm-strikethrough:0.28.0")
+    implementation("org.commonmark:commonmark-ext-gfm-tables:0.28.0")
+    implementation("org.commonmark:commonmark-ext-task-list-items:0.28.0")
 
     // CameraX (for node.invoke camera.* parity)
     implementation("androidx.camera:camera-core:1.5.2")
@@ -201,8 +201,8 @@ dependencies {
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
-    testImplementation("io.kotest:kotest-runner-junit5-jvm:6.1.9")
-    testImplementation("io.kotest:kotest-assertions-core-jvm:6.1.9")
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:6.1.11")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:6.1.11")
     testImplementation("com.squareup.okhttp3:mockwebserver:5.3.2")
     testImplementation("org.robolectric:robolectric:4.16.1")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:6.0.3")

@@ -5,12 +5,12 @@ import {
   type TextContent,
   type ThinkingContent,
   type ToolCall,
-  type ToolResultMessage,
 } from "@mariozechner/pi-ai";
 import {
   GrokWebClientBrowser,
   type GrokWebClientOptions,
 } from "../providers/grok-web-client-browser.js";
+import { stripInboundMeta } from "./strip-inbound-meta.js";
 
 const sessionMap = new Map<string, string>();
 
@@ -35,109 +35,30 @@ export function createGrokWebStreamFn(cookieOrJson: string): StreamFn {
         let sessionId = sessionMap.get(sessionKey);
 
         const messages = context.messages || [];
-        const systemPrompt = (context as unknown as { systemPrompt?: string }).systemPrompt || "";
 
-        // Build tool prompt if tools are available
-        const tools = context.tools || [];
-        let toolPrompt = "";
-
-        if (tools.length > 0) {
-          toolPrompt = "\n## Available Tools\n";
-          for (const tool of tools) {
-            toolPrompt += `- ${tool.name}: ${tool.description}\n`;
-          }
-        }
-
-        // Build prompt based on conversation state
+        // Grok web uses DOM simulation (typing into the browser input box).
+        // Only send the last user message to avoid overwhelming the input.
         let prompt = "";
-
-        if (!sessionId) {
-          // First turn: aggregate all history including system prompt
-          const historyParts: string[] = [];
-          let systemPromptContent = systemPrompt;
-
-          if (toolPrompt) {
-            systemPromptContent += toolPrompt;
-          }
-
-          if (systemPromptContent && !messages.some((m) => (m.role as string) === "system")) {
-            historyParts.push(`System: ${systemPromptContent}`);
-          }
-
-          for (const m of messages) {
-            const role = m.role === "user" || m.role === "toolResult" ? "User" : "Assistant";
-            let content = "";
-
-            if (m.role === "toolResult") {
-              const tr = m as unknown as ToolResultMessage;
-              let resultText = "";
-              if (Array.isArray(tr.content)) {
-                for (const part of tr.content) {
-                  if (part.type === "text") {
-                    resultText += part.text;
-                  }
-                }
-              }
-              content = `\n<tool_response id="${tr.toolCallId}" name="${tr.toolName}">\n${resultText}\n</tool_response>\n`;
-            } else if (Array.isArray(m.content)) {
-              for (const part of m.content) {
-                if (part.type === "text") {
-                  content += part.text;
-                } else if (part.type === "thinking") {
-                  content += `<think>\n${part.thinking}\n</think>\n`;
-                } else if (part.type === "toolCall") {
-                  const tc = part;
-                  content += `<tool_call id="${tc.id}" name="${tc.name}">${JSON.stringify(tc.arguments)}</tool_call>`;
-                }
-              }
-            } else {
-              content = String(m.content);
-            }
-            historyParts.push(`${role}: ${content}`);
-          }
-          prompt = historyParts.join("\n\n");
-        } else {
-          // Continuing turn: check if last message is toolResult or user
-          const lastMsg = messages[messages.length - 1];
-          if (lastMsg?.role === "toolResult") {
-            const tr = lastMsg as unknown as ToolResultMessage;
-            let resultText = "";
-            if (Array.isArray(tr.content)) {
-              for (const part of tr.content) {
-                if (part.type === "text") {
-                  resultText += part.text;
-                }
-              }
-            }
-            prompt = `\n<tool_response id="${tr.toolCallId}" name="${tr.toolName}">\n${resultText}\n</tool_response>\n\nPlease proceed based on this tool result.`;
-          } else {
-            const lastUserMessage = [...messages].toReversed().find((m) => m.role === "user");
-            if (lastUserMessage) {
-              if (typeof lastUserMessage.content === "string") {
-                prompt = lastUserMessage.content;
-              } else if (Array.isArray(lastUserMessage.content)) {
-                prompt = lastUserMessage.content
-                  .filter((part) => part.type === "text")
-                  .map((part) => part.text)
-                  .join("");
-              }
-            }
+        const lastUserMessage = [...messages].toReversed().find((m) => m.role === "user");
+        if (lastUserMessage) {
+          if (typeof lastUserMessage.content === "string") {
+            prompt = lastUserMessage.content;
+          } else if (Array.isArray(lastUserMessage.content)) {
+            prompt = lastUserMessage.content
+              .filter((part) => part.type === "text")
+              .map((part) => part.text)
+              .join("");
           }
         }
 
-        // Add tool reminder for continuing conversations
-        if (toolPrompt && sessionId) {
-          prompt +=
-            '\n\n[SYSTEM HINT]: Keep in mind your available tools. To use a tool, you MUST output the EXACT XML format: <tool_call id="unique_id" name="tool_name">{"arg": "value"}</tool_call>. Using plain text to describe your action will FAIL to execute the tool.';
-        }
-
+        prompt = stripInboundMeta(prompt);
         if (!prompt) {
           throw new Error("No message found to send to GrokWeb API");
         }
 
         console.log(`[GrokWebStream] Starting run for session: ${sessionKey}`);
         console.log(`[GrokWebStream] Conversation ID: ${sessionId || "new"}`);
-        console.log(`[GrokWebStream] Tools available: ${tools.length}`);
+        console.log(`[GrokWebStream] Tools available: ${(context.tools || []).length}`);
         console.log(`[GrokWebStream] Prompt length: ${prompt.length}`);
 
         const responseStream = await client.chatCompletions({
@@ -154,7 +75,7 @@ export function createGrokWebStreamFn(cookieOrJson: string): StreamFn {
         const reader = responseStream.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
-
+        let accumulatedContent = "";
         const indexMap = new Map<string, number>();
         let nextIndex = 0;
         const contentParts: (TextContent | ThinkingContent | ToolCall)[] = [];
@@ -350,10 +271,7 @@ export function createGrokWebStreamFn(cookieOrJson: string): StreamFn {
                   } catch (e) {
                     part.arguments = { raw: argStr };
                     console.error(
-                      `[Qwen Stream] Failed to parse JSON for tool call ${currentToolName}:`,
-                      argStr,
-                      "\nError:",
-                      e,
+                      `[GrokWebStream] Failed to parse JSON for tool call ${currentToolName}: ${argStr}\nError: ${String(e)}`,
                     );
                   }
                   stream.push({
@@ -424,8 +342,14 @@ export function createGrokWebStreamFn(cookieOrJson: string): StreamFn {
               data.content ??
               data.delta;
             if (typeof delta === "string" && delta) {
-              console.log(`[GrokWebStream] Delta: ${delta.slice(0, 100)}...`);
-              pushDelta(delta);
+              // Grok sends full accumulated content in each event — only emit the new portion
+              if (delta.length > accumulatedContent.length) {
+                const newDelta = delta.slice(accumulatedContent.length);
+                accumulatedContent = delta;
+                if (newDelta) {
+                  pushDelta(newDelta);
+                }
+              }
             }
           } catch {
             // Ignore parse errors
@@ -494,7 +418,7 @@ export function createGrokWebStreamFn(cookieOrJson: string): StreamFn {
             },
             timestamp: Date.now(),
           },
-        } as any);
+        } as unknown as Parameters<typeof stream.push>[0]);
       } finally {
         stream.end();
       }

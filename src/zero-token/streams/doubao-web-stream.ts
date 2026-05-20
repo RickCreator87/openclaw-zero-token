@@ -5,12 +5,12 @@ import {
   type TextContent,
   type ThinkingContent,
   type ToolCall,
-  type ToolResultMessage,
 } from "@mariozechner/pi-ai";
 import {
   DoubaoWebClientBrowser,
   type DoubaoWebClientOptions,
 } from "../providers/doubao-web-client-browser.js";
+import { stripInboundMeta } from "./strip-inbound-meta.js";
 
 const sessionMap = new Map<string, string>();
 
@@ -36,82 +36,28 @@ export function createDoubaoWebStreamFn(cookieOrJson: string): StreamFn {
 
         const messages = context.messages || [];
 
-        // Build tool prompt if tools are available
-        const tools = context.tools || [];
-        let toolPrompt = "";
-
-        if (tools.length > 0) {
-          toolPrompt = "\n## Available Tools\n";
-          for (const tool of tools) {
-            toolPrompt += `- ${tool.name}: ${tool.description}\n`;
-          }
-        }
-
-        // Build prompt based on conversation state
+        // Doubao web uses DOM simulation — only send the last user message.
+        // System prompts, tools, and full history would overwhelm the input.
         let prompt = "";
-
-        if (!sessionId) {
-          // First turn: send only the last user message to avoid exceeding
-          // Doubao's prompt length limit. Full conversation history is only
-          // needed after a session ID is established.
-          const lastUserMessage = [...messages].toReversed().find((m) => m.role === "user");
-          if (lastUserMessage) {
-            if (typeof lastUserMessage.content === "string") {
-              prompt = lastUserMessage.content;
-            } else if (Array.isArray(lastUserMessage.content)) {
-              prompt = lastUserMessage.content
-                .filter((part) => part.type === "text")
-                .map((part) => part.text)
-                .join("");
-            }
-          }
-          // Add tool reminder if tools are available
-          if (toolPrompt && prompt) {
-            prompt +=
-              "\n\n[SYSTEM HINT]: Keep in mind your available tools. To use a tool, you MUST output the EXACT XML format: <tool_call id=\"unique_id\" name=\"tool_name\">{\"arg\": \"value\"}</tool_call>.";
-          }
-        } else {
-          // Continuing turn: check if last message is toolResult or user
-          const lastMsg = messages[messages.length - 1];
-          if (lastMsg?.role === "toolResult") {
-            const tr = lastMsg as unknown as ToolResultMessage;
-            let resultText = "";
-            if (Array.isArray(tr.content)) {
-              for (const part of tr.content) {
-                if (part.type === "text") {
-                  resultText += part.text;
-                }
-              }
-            }
-            prompt = `\n<tool_response id="${tr.toolCallId}" name="${tr.toolName}">\n${resultText}\n</tool_response>\n\nPlease proceed based on this tool result.`;
-          } else {
-            const lastUserMessage = [...messages].toReversed().find((m) => m.role === "user");
-            if (lastUserMessage) {
-              if (typeof lastUserMessage.content === "string") {
-                prompt = lastUserMessage.content;
-              } else if (Array.isArray(lastUserMessage.content)) {
-                prompt = lastUserMessage.content
-                  .filter((part) => part.type === "text")
-                  .map((part) => part.text)
-                  .join("");
-              }
-            }
+        const lastUserMessage = [...messages].toReversed().find((m) => m.role === "user");
+        if (lastUserMessage) {
+          if (typeof lastUserMessage.content === "string") {
+            prompt = lastUserMessage.content;
+          } else if (Array.isArray(lastUserMessage.content)) {
+            prompt = (lastUserMessage.content as TextContent[])
+              .filter((part) => part.type === "text")
+              .map((part) => part.text)
+              .join("");
           }
         }
 
-        // Add tool reminder for continuing conversations
-        if (toolPrompt && sessionId) {
-          prompt +=
-            '\n\n[SYSTEM HINT]: Keep in mind your available tools. To use a tool, you MUST output the EXACT XML format: <tool_call id="unique_id" name="tool_name">{"arg": "value"}</tool_call>. Using plain text to describe your action will FAIL to execute the tool.';
-        }
-
+        prompt = stripInboundMeta(prompt);
         if (!prompt) {
           throw new Error("No message found to send to DoubaoWeb API");
         }
 
         console.log(`[DoubaoWebStream] Starting run for session: ${sessionKey}`);
         console.log(`[DoubaoWebStream] Conversation ID: ${sessionId || "new"}`);
-        console.log(`[DoubaoWebStream] Tools available: ${tools.length}`);
         console.log(`[DoubaoWebStream] Prompt length: ${prompt.length}`);
 
         const responseStream = await client.chatCompletions({
@@ -246,14 +192,18 @@ export function createDoubaoWebStreamFn(cookieOrJson: string): StreamFn {
         const textFlushThreshold = 20;
 
         const flushTextBuffer = () => {
-          if (!textBuffer) {return;}
+          if (!textBuffer) {
+            return;
+          }
           const text = textBuffer;
           textBuffer = "";
           emitDelta("text", text);
         };
 
         const pushDelta = (delta: string, forceType?: "text" | "thinking") => {
-          if (!delta) {return;}
+          if (!delta) {
+            return;
+          }
 
           // Always accumulate into tagBuffer first so checkTags() can detect boundaries.
           tagBuffer += delta;
@@ -404,9 +354,17 @@ export function createDoubaoWebStreamFn(cookieOrJson: string): StreamFn {
           checkTags();
         };
 
+        let lineCount = 0;
         const processLine = (line: string) => {
+          lineCount++;
           if (!line || !line.startsWith("data:")) {
             return;
+          }
+          // Log first few lines and every 50th for diagnosis
+          if (lineCount <= 5 || lineCount % 50 === 0) {
+            console.log(
+              `[DoubaoStream] line[${lineCount}]: ${line.slice(0, 120).replace(/\n/g, "\\n")}`,
+            );
           }
 
           const dataStr = line.slice(5).trim();
@@ -423,41 +381,57 @@ export function createDoubaoWebStreamFn(cookieOrJson: string): StreamFn {
             }
 
             // Handle Doubao's event-based response format
-            // event_type 2002 = message created, event_type 2003 = content delta
+            // event_type 2001 = message content (delta in event_data.message.content)
+            // event_type 2002 = message created (no text)
+            // event_type 2003 = unknown (empty keys in this trace)
+            // event_type 2010 = seed intention (no text)
             let delta = "";
 
-            if (data.event_type === 2003 && data.event_data) {
-              // Content delta event - extract text from event_data
-              try {
-                const eventData = JSON.parse(data.event_data);
-                delta = eventData.text || eventData.content || eventData.delta || "";
-              } catch {
-                delta = data.event_data;
+            if (data.event_data) {
+              let eventData: Record<string, unknown>;
+              if (typeof data.event_data === "string") {
+                try {
+                  eventData = JSON.parse(data.event_data);
+                } catch {
+                  eventData = {};
+                }
+              } else {
+                eventData = data.event_data;
               }
-            } else if (data.event_data) {
-              // Try to parse event_data for content
-              try {
-                const eventData =
-                  typeof data.event_data === "string"
-                    ? JSON.parse(data.event_data)
-                    : data.event_data;
+
+              if (data.event_type === 2001) {
+                // Message content: event_data.message.content is a JSON string
+                // containing {text: "...", suggest: "...", suggestions: [...]}
+                // We only want the text field, and we accumulate across events.
+                const msg = eventData.message as Record<string, unknown> | undefined;
+                const contentRaw = msg?.content;
+                if (typeof contentRaw === "string") {
+                  try {
+                    const contentObj = JSON.parse(contentRaw);
+                    delta = typeof contentObj.text === "string" ? contentObj.text : "";
+                  } catch {
+                    delta = "";
+                  }
+                } else {
+                  delta = "";
+                }
+              } else if (data.event_type === 2003) {
+                // Content delta at top level
                 delta =
-                  eventData.text ||
-                  eventData.content ||
-                  eventData.delta ||
-                  eventData.message?.content ||
+                  (eventData.text as string) ||
+                  (eventData.content as string) ||
+                  (eventData.delta as string) ||
                   "";
-              } catch {
-                // event_data is not JSON
               }
             }
 
-            // Also try standard format
+            // Standard format fallback
             if (!delta) {
               delta = data.choices?.[0]?.delta?.content ?? data.text ?? data.content ?? data.delta;
             }
 
             if (typeof delta === "string" && delta) {
+              // Doubao sends incremental deltas (each event = new chars only).
               pushDelta(delta);
             }
           } catch {
@@ -536,7 +510,7 @@ export function createDoubaoWebStreamFn(cookieOrJson: string): StreamFn {
             },
             timestamp: Date.now(),
           },
-        } as any);
+        } as Parameters<typeof stream.push>[0]);
       } finally {
         stream.end();
       }

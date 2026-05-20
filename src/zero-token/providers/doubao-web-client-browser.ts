@@ -8,7 +8,10 @@ import {
   getChromeWebSocketUrl,
   type RunningChrome,
 } from "../../../extensions/browser/src/browser/chrome.js";
-import { resolveBrowserConfig, resolveProfile } from "../../../extensions/browser/src/browser/config.js";
+import {
+  resolveBrowserConfig,
+  resolveProfile,
+} from "../../../extensions/browser/src/browser/config.js";
 import { loadConfig } from "../../config/io.js";
 import type { ModelDefinitionConfig } from "../../config/types.models.js";
 
@@ -314,15 +317,23 @@ export class DoubaoWebClientBrowser {
           }
         }
       } catch (e) {
-        console.log(`[Doubao Web Browser] Could not extract conversation_id: ${e}`);
+        console.log(`[Doubao Web Browser] Could not extract conversation_id: ${String(e)}`);
       }
     }
 
-    // 转换为 ReadableStream
+    // 转换为 ReadableStream，预先按行切分
+    // NOTE: enqueue ALL data in start() so it is immediately available to the caller.
+    // Using lazy pull() here causes a deadlock because reader.read() is called
+    // synchronously from DoubaoWebStream before pull() is ever invoked.
     const encoder = new TextEncoder();
+    const lines = (responseData.data ?? "").split("\n");
     const stream = new ReadableStream({
       start(controller) {
-        controller.enqueue(encoder.encode(responseData.data));
+        for (const line of lines) {
+          if (line) {
+            controller.enqueue(encoder.encode(line + "\n"));
+          }
+        }
         controller.close();
       },
     });

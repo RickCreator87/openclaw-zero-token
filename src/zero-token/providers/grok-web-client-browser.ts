@@ -1,7 +1,13 @@
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright-core";
 import { getHeadersWithAuth } from "../../../extensions/browser/src/browser/cdp.helpers.js";
-import { getChromeWebSocketUrl, launchOpenClawChrome } from "../../../extensions/browser/src/browser/chrome.js";
-import { resolveBrowserConfig, resolveProfile } from "../../../extensions/browser/src/browser/config.js";
+import {
+  getChromeWebSocketUrl,
+  launchOpenClawChrome,
+} from "../../../extensions/browser/src/browser/chrome.js";
+import {
+  resolveBrowserConfig,
+  resolveProfile,
+} from "../../../extensions/browser/src/browser/config.js";
 import { loadConfig } from "../../config/io.js";
 
 export interface GrokWebClientOptions {
@@ -123,77 +129,33 @@ export class GrokWebClientBrowser {
       throw new Error("GrokWebClientBrowser not initialized");
     }
 
-    const sent = await this.page.evaluate((msg: string) => {
-      const inputSelectors = [
-        '[contenteditable="true"]',
-        "textarea[placeholder]",
-        "textarea",
-        'div[role="textbox"]',
-        'div[contenteditable="true"]',
-      ];
-      let inputEl: HTMLElement | null = null;
-      for (const sel of inputSelectors) {
-        inputEl = document.querySelector(sel);
-        if (inputEl && inputEl.offsetParent !== null) {
-          break;
-        }
-      }
-      if (!inputEl) {
-        return { ok: false, error: "找不到输入框" };
-      }
+    const page = this.page;
 
-      inputEl.focus();
-      if (inputEl.tagName === "TEXTAREA" || (inputEl as HTMLInputElement).tagName === "INPUT") {
-        (inputEl as HTMLTextAreaElement).value = msg;
-        (inputEl as HTMLTextAreaElement).dispatchEvent(new Event("input", { bubbles: true }));
-      } else {
-        inputEl.innerText = msg;
-        inputEl.dispatchEvent(new Event("input", { bubbles: true }));
-        inputEl.dispatchEvent(new Event("change", { bubbles: true }));
+    // Find input using Playwright selector
+    const inputSelectors = [
+      '[contenteditable="true"]',
+      "textarea[placeholder]",
+      "textarea",
+      'div[role="textbox"]',
+    ];
+    let inputHandle = null;
+    for (const sel of inputSelectors) {
+      inputHandle = await page.$(sel);
+      if (inputHandle) {
+        break;
       }
-
-      const sendSelectors = [
-        'button[aria-label*="Send"]',
-        'button[aria-label*="send"]',
-        'button[type="submit"]',
-        'button[data-testid*="send"]',
-        "form button[type=submit]",
-        "button:has(svg)",
-        ".send-button",
-        "[class*='send']",
-      ];
-      let sendBtn: HTMLElement | null = null;
-      for (const sel of sendSelectors) {
-        sendBtn = document.querySelector(sel);
-        if (sendBtn && !(sendBtn as HTMLButtonElement).disabled) {
-          break;
-        }
-      }
-      if (sendBtn) {
-        sendBtn.click();
-        return { ok: true };
-      }
-      const textarea = inputEl.closest("form")?.querySelector("button[type=submit]");
-      if (textarea) {
-        (textarea as HTMLElement).click();
-        return { ok: true };
-      }
-      const keyEvent = new KeyboardEvent("keydown", {
-        key: "Enter",
-        code: "Enter",
-        keyCode: 13,
-        which: 13,
-        bubbles: true,
-      });
-      inputEl.dispatchEvent(keyEvent);
-      return { ok: true };
-    }, params.message);
-
-    if (!sent.ok) {
-      throw new Error(`Grok DOM 模拟失败: ${sent.error}`);
+    }
+    if (!inputHandle) {
+      throw new Error("Grok DOM 模拟失败: 找不到输入框");
     }
 
-    console.log("[Grok Web Browser] DOM 模拟已发送，轮询等待回复...");
+    // Use Playwright native APIs for reliable input
+    await inputHandle.click();
+    await page.waitForTimeout(300);
+    await page.keyboard.type(params.message, { delay: 20 });
+    await page.waitForTimeout(300);
+    await page.keyboard.press("Enter");
+    console.log("[Grok Web Browser] DOM: typed message and pressed Enter");
 
     const maxWaitMs = 90000;
     const pollIntervalMs = 2000;
@@ -304,7 +266,7 @@ export class GrokWebClientBrowser {
         conversationId,
         parentResponseId,
         message,
-        model,
+        model: _model,
       }: {
         conversationId?: string;
         parentResponseId?: string;

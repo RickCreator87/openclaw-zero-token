@@ -1,4 +1,5 @@
 import type { StreamFn } from "@mariozechner/pi-agent-core";
+import { wrapWithToolCalling } from "../tool-calling/web-stream-middleware.js";
 import { createChatGPTWebStreamFn } from "./chatgpt-web-stream.js";
 import { createClaudeWebStreamFn } from "./claude-web-stream.js";
 import { createDeepseekWebStreamFn } from "./deepseek-web-stream.js";
@@ -33,7 +34,11 @@ const WEB_STREAM_FACTORIES = {
 export type WebStreamApiId = keyof typeof WEB_STREAM_FACTORIES;
 
 export function getWebStreamFactory(api: string): ((cookie: string) => StreamFn) | undefined {
-  return WEB_STREAM_FACTORIES[api as WebStreamApiId];
+  const factory = WEB_STREAM_FACTORIES[api as WebStreamApiId];
+  if (!factory) {
+    return undefined;
+  }
+  return (cookie: string) => wrapWithToolCalling(factory(cookie), api);
 }
 
 export function listWebStreamApiIds(): WebStreamApiId[] {

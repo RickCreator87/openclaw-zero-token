@@ -5,12 +5,12 @@ import {
   type TextContent,
   type ThinkingContent,
   type ToolCall,
-  type ToolResultMessage,
 } from "@mariozechner/pi-ai";
 import {
   QwenCNWebClientBrowser,
   type QwenCNWebClientOptions,
 } from "../providers/qwen-cn-web-client-browser.js";
+import { stripInboundMeta } from "./strip-inbound-meta.js";
 
 const sessionMap = new Map<string, string>();
 
@@ -35,109 +35,29 @@ export function createQwenCNWebStreamFn(cookieOrJson: string): StreamFn {
         let sessionId = sessionMap.get(sessionKey);
 
         const messages = context.messages || [];
-        const systemPrompt = (context as unknown as { systemPrompt?: string }).systemPrompt || "";
 
-        // Build tool prompt if tools are available
-        const tools = context.tools || [];
-        let toolPrompt = "";
-
-        if (tools.length > 0) {
-          toolPrompt = "\n## Available Tools\n";
-          for (const tool of tools) {
-            toolPrompt += `- ${tool.name}: ${tool.description}\n`;
-          }
-        }
-
-        // Build prompt based on conversation state
+        // Qwen CN web uses DOM simulation — only send the last user message.
+        // System prompts, tools, and full history would overwhelm the input.
         let prompt = "";
-
-        if (!sessionId) {
-          // First turn: aggregate all history including system prompt
-          const historyParts: string[] = [];
-          let systemPromptContent = systemPrompt;
-
-          if (toolPrompt) {
-            systemPromptContent += toolPrompt;
-          }
-
-          if (systemPromptContent && !messages.some((m) => (m.role as string) === "system")) {
-            historyParts.push(`System: ${systemPromptContent}`);
-          }
-
-          for (const m of messages) {
-            const role = m.role === "user" || m.role === "toolResult" ? "User" : "Assistant";
-            let content = "";
-
-            if (m.role === "toolResult") {
-              const tr = m as unknown as ToolResultMessage;
-              let resultText = "";
-              if (Array.isArray(tr.content)) {
-                for (const part of tr.content) {
-                  if (part.type === "text") {
-                    resultText += part.text;
-                  }
-                }
-              }
-              content = `\n<tool_response id="${tr.toolCallId}" name="${tr.toolName}">\n${resultText}\n</tool_response>\n`;
-            } else if (Array.isArray(m.content)) {
-              for (const part of m.content) {
-                if (part.type === "text") {
-                  content += part.text;
-                } else if (part.type === "thinking") {
-                  content += `<think>\n${part.thinking}\n</think>\n`;
-                } else if (part.type === "toolCall") {
-                  const tc = part;
-                  content += `<tool_call id="${tc.id}" name="${tc.name}">${JSON.stringify(tc.arguments)}</tool_call>`;
-                }
-              }
-            } else {
-              content = String(m.content);
-            }
-            historyParts.push(`${role}: ${content}`);
-          }
-          prompt = historyParts.join("\n\n");
-        } else {
-          // Continuing turn: check if last message is toolResult or user
-          const lastMsg = messages[messages.length - 1];
-          if (lastMsg?.role === "toolResult") {
-            const tr = lastMsg as unknown as ToolResultMessage;
-            let resultText = "";
-            if (Array.isArray(tr.content)) {
-              for (const part of tr.content) {
-                if (part.type === "text") {
-                  resultText += part.text;
-                }
-              }
-            }
-            prompt = `\n<tool_response id="${tr.toolCallId}" name="${tr.toolName}">\n${resultText}\n</tool_response>\n\nPlease proceed based on this tool result.`;
-          } else {
-            const lastUserMessage = [...messages].toReversed().find((m) => m.role === "user");
-            if (lastUserMessage) {
-              if (typeof lastUserMessage.content === "string") {
-                prompt = lastUserMessage.content;
-              } else if (Array.isArray(lastUserMessage.content)) {
-                prompt = lastUserMessage.content
-                  .filter((part) => part.type === "text")
-                  .map((part) => part.text)
-                  .join("");
-              }
-            }
+        const lastUserMessage = [...messages].toReversed().find((m) => m.role === "user");
+        if (lastUserMessage) {
+          if (typeof lastUserMessage.content === "string") {
+            prompt = lastUserMessage.content;
+          } else if (Array.isArray(lastUserMessage.content)) {
+            prompt = (lastUserMessage.content as TextContent[])
+              .filter((part) => part.type === "text")
+              .map((part) => part.text)
+              .join("");
           }
         }
 
-        // Add tool reminder for continuing conversations
-        if (toolPrompt && sessionId) {
-          prompt +=
-            '\n\n[SYSTEM HINT]: Keep in mind your available tools. To use a tool, you MUST output the EXACT XML format: <tool_call id="unique_id" name="tool_name">{"arg": "value"}</tool_call>. Using plain text to describe your action will FAIL to execute the tool.';
-        }
-
+        prompt = stripInboundMeta(prompt);
         if (!prompt) {
           throw new Error("No message found to send to Qwen API");
         }
 
         console.log(`[QwenCNWebStream] Starting run for session: ${sessionKey}`);
         console.log(`[QwenCNWebStream] Conversation ID: ${sessionId || "new"}`);
-        console.log(`[QwenCNWebStream] Tools available: ${tools.length}`);
         console.log(`[QwenCNWebStream] Prompt length: ${prompt.length}`);
 
         const responseStream = await client.chatCompletions({
@@ -395,7 +315,6 @@ export function createQwenCNWebStreamFn(cookieOrJson: string): StreamFn {
           checkTags();
         };
 
-        let hasExtractedContent = false;
         let lastExtractedContent = "";
         const processLine = (line: string) => {
           if (!line) {
@@ -405,8 +324,6 @@ export function createQwenCNWebStreamFn(cookieOrJson: string): StreamFn {
           // Parse SSE format: event: xxx\ndata: yyy
           // Current line could be event: or data:
           if (line.startsWith("event:")) {
-            const eventType = line.slice(6).trim();
-            console.log(`[QwenCNWebStream] SSE event type: ${eventType}`);
             return;
           }
 
@@ -421,46 +338,10 @@ export function createQwenCNWebStreamFn(cookieOrJson: string): StreamFn {
 
           try {
             const data = JSON.parse(dataStr);
-            console.log(`[QwenCNWebStream] Parsed data keys: ${Object.keys(data).join(", ")}`);
-            if (Object.keys(data).length > 0) {
-              console.log(
-                `[QwenCNWebStream] Data sample: ${JSON.stringify(data).substring(0, 200)}...`,
-              );
-            }
-            // Deep debug for data.data
-            if (data.data && typeof data.data === "object") {
-              console.log(`[QwenCNWebStream] data.data keys: ${Object.keys(data.data).join(", ")}`);
-              if (data.data.messages && Array.isArray(data.data.messages)) {
-                console.log(
-                  `[QwenCNWebStream] messages array length: ${data.data.messages.length}`,
-                );
-                for (let i = 0; i < data.data.messages.length; i++) {
-                  const msg = data.data.messages[i];
-                  console.log(
-                    `[QwenCNWebStream] messages[${i}] keys: ${Object.keys(msg).join(", ")}`,
-                  );
-                  if (msg.content) {
-                    console.log(
-                      `[QwenCNWebStream] messages[${i}].content: "${String(msg.content).substring(0, 100)}"`,
-                    );
-                  }
-                  if (msg.text) {
-                    console.log(
-                      `[QwenCNWebStream] messages[${i}].text: "${String(msg.text).substring(0, 100)}"`,
-                    );
-                  }
-                  if (msg.delta) {
-                    console.log(
-                      `[QwenCNWebStream] messages[${i}].delta: "${String(msg.delta).substring(0, 100)}"`,
-                    );
-                  }
-                }
-              }
-            }
 
             // Extract conversation ID
-            if (data.sessionId || data.sessionId) {
-              sessionMap.set(sessionKey, data.sessionId || data.sessionId);
+            if (data.sessionId) {
+              sessionMap.set(sessionKey, data.sessionId);
             }
 
             // Extract content delta - Qwen v2 uses choices[0].delta.content
@@ -471,35 +352,6 @@ export function createQwenCNWebStreamFn(cookieOrJson: string): StreamFn {
             console.log(
               `[QwenCNWebStream] Debug data.communication: ${JSON.stringify(data.communication)?.substring(0, 200)}`,
             );
-
-            // Debug messages array if present
-            if (
-              data.data?.messages &&
-              Array.isArray(data.data.messages) &&
-              data.data.messages.length > 0
-            ) {
-              console.log(
-                `[QwenCNWebStream] Debug messages[0]: ${JSON.stringify(data.data.messages[0])?.substring(0, 300)}`,
-              );
-              // Check for content in various possible locations
-              const msg = data.data.messages[0];
-              console.log(`[QwenCNWebStream] Debug msg keys: ${Object.keys(msg).join(", ")}`);
-              if (msg.content) {
-                console.log(
-                  `[QwenCNWebStream] Debug msg.content: ${typeof msg.content} = "${String(msg.content).substring(0, 100)}"`,
-                );
-              }
-              if (msg.text) {
-                console.log(
-                  `[QwenCNWebStream] Debug msg.text: ${typeof msg.text} = "${String(msg.text).substring(0, 100)}"`,
-                );
-              }
-              if (msg.delta) {
-                console.log(
-                  `[QwenCNWebStream] Debug msg.delta: ${typeof msg.delta} = "${String(msg.delta).substring(0, 100)}"`,
-                );
-              }
-            }
 
             let delta = "";
             // Qwen CN Web specific extraction
@@ -530,14 +382,22 @@ export function createQwenCNWebStreamFn(cookieOrJson: string): StreamFn {
                 delta = data.text ?? data.content ?? data.delta;
               }
             }
-            console.log(`[QwenCNWebStream] Delta extracted: ${typeof delta}, value="${delta}"`);
             if (typeof delta === "string" && delta) {
-              // Avoid duplicate content from multiple SSE events
-              if (delta !== lastExtractedContent) {
+              // Qwen CN sends accumulated content (not incremental deltas).
+              // Only emit the new portion to avoid repetition.
+              if (
+                delta.length > lastExtractedContent.length &&
+                delta.startsWith(lastExtractedContent)
+              ) {
+                const newPart = delta.slice(lastExtractedContent.length);
+                lastExtractedContent = delta;
+                if (newPart) {
+                  pushDelta(newPart);
+                }
+              } else if (delta !== lastExtractedContent) {
+                // Completely different content — emit as-is (new message)
                 lastExtractedContent = delta;
                 pushDelta(delta);
-              } else {
-                console.log(`[QwenCNWebStream] Skipping duplicate content`);
               }
             }
           } catch {
@@ -607,7 +467,7 @@ export function createQwenCNWebStreamFn(cookieOrJson: string): StreamFn {
             },
             timestamp: Date.now(),
           },
-        } as any);
+        } as unknown as Parameters<typeof stream.push>[0]);
       } finally {
         stream.end();
       }

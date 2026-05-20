@@ -129,3 +129,4 @@ dist/protocol.schema.json
 .openclaw-zero-state/
 dev-debug.sh
 .gateway.pid
+reports/

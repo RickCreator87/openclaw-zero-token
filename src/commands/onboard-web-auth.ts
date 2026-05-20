@@ -92,7 +92,7 @@ async function addModelToWhitelist(providerId: string, modelIds: string[]): Prom
       "perplexity-web": "Perplexity Web",
     },
     "qwen-web": {
-      "qwen-max": "Qwen Web",
+      "qwen3.5-plus": "Qwen Web",
     },
     "qwen-cn-web": {
       "qwen-turbo": "Qwen CN Web",
@@ -151,6 +151,8 @@ async function syncModelsProvidersToConfig(): Promise<void> {
       mode: config.models?.mode ?? "merge",
       providers: { ...config.models?.providers, ...providers },
     },
+    // Preserve existing agents.defaults.models whitelist — do NOT overwrite it.
+    agents: config.agents,
   };
 
   // 若尚未设置主模型，使用首个 web provider 的首个模型，避免回退到 anthropic
@@ -283,7 +285,7 @@ export async function runOnboardWebAuth(): Promise<void> {
     "grok-web": ["grok-2"],
     "kimi-web": ["moonshot-v1-32k"],
     "perplexity-web": ["perplexity-web"],
-    "qwen-web": ["qwen-max"],
+    "qwen-web": ["qwen3.5-plus"],
     "qwen-cn-web": ["qwen-turbo"],
     "xiaomimo-web": ["xiaomimo-chat"],
   };

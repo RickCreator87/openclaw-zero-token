@@ -10,11 +10,7 @@ import {
   PerplexityWebClientBrowser,
   type PerplexityWebClientOptions,
 } from "../providers/perplexity-web-client-browser.js";
-
-// Helper to strip messages for web providers
-function stripForWebProvider(prompt: string): string {
-  return prompt;
-}
+import { stripInboundMeta } from "./strip-inbound-meta.js";
 
 export function createPerplexityWebStreamFn(cookieOrJson: string): StreamFn {
   let options: PerplexityWebClientOptions;
@@ -64,12 +60,30 @@ export function createPerplexityWebStreamFn(cookieOrJson: string): StreamFn {
             content = String(m.content);
           }
           if (m.role === "user" && content) {
-            content = stripForWebProvider(content) || content;
+            content = stripInboundMeta(content) || content;
           }
           historyParts.push(`${role}: ${content}`);
         }
 
-        const prompt = historyParts.join("\n\n");
+        // Perplexity is a search engine, not a chat model.
+        // Only send the last user message to avoid overwhelming it with system prompts.
+        let prompt = "";
+        const lastUserMsg = [...messages].toReversed().find((m) => m.role === "user");
+        if (lastUserMsg) {
+          if (typeof lastUserMsg.content === "string") {
+            prompt = stripInboundMeta(lastUserMsg.content) || lastUserMsg.content;
+          } else if (Array.isArray(lastUserMsg.content)) {
+            prompt = (lastUserMsg.content as Array<{ type: string; text?: string }>)
+              .filter((p) => p.type === "text")
+              .map((p) => p.text || "")
+              .join("");
+            prompt = stripInboundMeta(prompt) || prompt;
+          }
+        }
+        if (!prompt) {
+          // Fallback to full history if no user message found
+          prompt = historyParts.join("\n\n");
+        }
         if (!prompt) {
           throw new Error("No message found to send to Perplexity API");
         }
@@ -192,8 +206,7 @@ export function createPerplexityWebStreamFn(cookieOrJson: string): StreamFn {
             },
             timestamp: Date.now(),
           },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any);
+        } as unknown as Parameters<typeof stream.push>[0]);
       } finally {
         stream.end();
       }

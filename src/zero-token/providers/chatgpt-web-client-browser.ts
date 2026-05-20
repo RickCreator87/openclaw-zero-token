@@ -8,7 +8,10 @@ import {
   getChromeWebSocketUrl,
   type RunningChrome,
 } from "../../../extensions/browser/src/browser/chrome.js";
-import { resolveBrowserConfig, resolveProfile } from "../../../extensions/browser/src/browser/config.js";
+import {
+  resolveBrowserConfig,
+  resolveProfile,
+} from "../../../extensions/browser/src/browser/config.js";
 import { loadConfig } from "../../config/io.js";
 import type { ModelDefinitionConfig } from "../../config/types.models.js";
 
@@ -189,61 +192,30 @@ export class ChatGPTWebClientBrowser {
   }): Promise<ReadableStream<Uint8Array>> {
     const { page } = await this.ensureBrowser();
 
-    const sent = await page.evaluate((msg: string) => {
-      // 多备选选择器适配 ChatGPT 不同版本 UI
-      const inputSelectors = [
-        "#prompt-textarea",
-        "textarea[placeholder]",
-        "textarea",
-        '[contenteditable="true"][data-placeholder]',
-        "[contenteditable='true']",
-      ];
-      let inputEl: HTMLTextAreaElement | HTMLElement | null = null;
-      for (const sel of inputSelectors) {
-        inputEl = document.querySelector(sel);
-        if (inputEl && inputEl.offsetParent !== null) {
-          break;
-        }
+    // Use Playwright native APIs for reliable input (same as Gemini/Grok/Perplexity)
+    const inputSelectors = [
+      "#prompt-textarea",
+      "textarea[placeholder]",
+      "textarea",
+      '[contenteditable="true"]',
+    ];
+    let inputHandle = null;
+    for (const sel of inputSelectors) {
+      inputHandle = await page.$(sel);
+      if (inputHandle) {
+        break;
       }
-      if (!inputEl) {
-        return { ok: false, error: "找不到输入框" };
-      }
-
-      inputEl.focus();
-      if (inputEl.tagName === "TEXTAREA" || (inputEl as HTMLInputElement).tagName === "INPUT") {
-        (inputEl as HTMLTextAreaElement).value = msg;
-        (inputEl as HTMLTextAreaElement).dispatchEvent(new Event("input", { bubbles: true }));
-      } else {
-        (inputEl as HTMLElement).textContent = msg;
-        (inputEl as HTMLElement).dispatchEvent(new Event("input", { bubbles: true }));
-      }
-
-      const sendSelectors = [
-        "#composer-submit-button",
-        'button[data-testid="send-button"]',
-        "button.btn.relative.btn-primary",
-        "button.mb-1.mr-1.flex.h-8.w-8.items-center.justify-center.rounded-full.bg-black",
-        'button[aria-label*="Send"]',
-        'button[type="submit"]',
-        "form button[type=submit]",
-      ];
-      let sendBtn: HTMLElement | null = null;
-      for (const sel of sendSelectors) {
-        sendBtn = document.querySelector(sel);
-        if (sendBtn && !(sendBtn as HTMLButtonElement).disabled) {
-          break;
-        }
-      }
-      if (!sendBtn) {
-        return { ok: false, error: "找不到发送按钮" };
-      }
-      sendBtn.click();
-      return { ok: true };
-    }, params.message);
-
-    if (!sent.ok) {
-      throw new Error(`ChatGPT DOM 模拟失败: ${sent.error}`);
     }
+    if (!inputHandle) {
+      throw new Error("ChatGPT DOM 模拟失败: 找不到输入框");
+    }
+
+    await inputHandle.click();
+    await page.waitForTimeout(300);
+    await page.keyboard.type(params.message, { delay: 20 });
+    await page.waitForTimeout(500);
+    await page.keyboard.press("Enter");
+    console.log("[ChatGPT Web Browser] DOM: typed message and pressed Enter");
 
     // 轮询等待回复完成（最多约 90 秒，降低频率减少封号风险）
     const maxWaitMs = 90000;
@@ -390,6 +362,8 @@ export class ChatGPTWebClientBrowser {
         }
 
         async function tryFetchWithSentinel(accessToken: string | undefined, deviceId: string) {
+          // Warm up sentinel endpoints before the real request
+          await warmupSentinel(accessToken, deviceId);
           const scripts = Array.from(document.scripts);
           const assetSrc = scripts
             .map((s) => s.src)
@@ -492,14 +466,14 @@ export class ChatGPTWebClientBrowser {
           signal: params.signal,
         });
       }
-      const sentinelHint = responseData.sentinelError
-        ? ` Sentinel: ${responseData.sentinelError}`
-        : " 若持续 403，需在 chatgpt.com 控制台检查 oaistatic 脚本导出名是否变更。";
       if (responseData.status === 401) {
         throw new Error("ChatGPT 认证失败，请重新运行 ./onboard.sh 刷新 session。");
       }
+      const sentinelHint = responseData.sentinelError
+        ? ` Sentinel: ${responseData.sentinelError}`
+        : " 若持续 403，需在 chatgpt.com 控制台检查 oaistatic 脚本导出名是否变更。";
       throw new Error(
-        `ChatGPT API 错误 ${responseData.status}: ${responseData.error?.slice(0, 200) || ""}`,
+        `ChatGPT API 错误 ${responseData.status}: ${responseData.error?.slice(0, 200) || ""}${sentinelHint}`,
       );
     }
 

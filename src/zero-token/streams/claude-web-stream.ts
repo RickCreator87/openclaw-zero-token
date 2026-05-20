@@ -350,10 +350,7 @@ export function createClaudeWebStreamFn(cookieOrJson: string): StreamFn {
                   } catch (e) {
                     part.arguments = { raw: argStr };
                     console.error(
-                      `[Qwen Stream] Failed to parse JSON for tool call ${currentToolName}:`,
-                      argStr,
-                      "\nError:",
-                      e,
+                      `[ClaudeWebStream] Failed to parse JSON for tool call ${currentToolName}: ${argStr}\nError: ${String(e)}`,
                     );
                   }
                   stream.push({
@@ -498,7 +495,7 @@ export function createClaudeWebStreamFn(cookieOrJson: string): StreamFn {
             },
             timestamp: Date.now(),
           },
-        } as any);
+        } as unknown as Parameters<typeof stream.push>[0]);
       } finally {
         stream.end();
       }

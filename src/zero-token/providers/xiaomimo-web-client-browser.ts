@@ -8,7 +8,10 @@ import {
   getChromeWebSocketUrl,
   type RunningChrome,
 } from "../../../extensions/browser/src/browser/chrome.js";
-import { resolveBrowserConfig, resolveProfile } from "../../../extensions/browser/src/browser/config.js";
+import {
+  resolveBrowserConfig,
+  resolveProfile,
+} from "../../../extensions/browser/src/browser/config.js";
 import { loadConfig } from "../../config/io.js";
 import type { ModelDefinitionConfig } from "../../config/types.models.js";
 
@@ -241,7 +244,6 @@ export class XiaomiMimoWebClientBrowser {
     );
 
     console.log(`[XiaomiMimo] Result: ok=${result.ok}, len=${result.data?.length || 0}`);
-    console.log(`[XiaomiMimo] Response: ${result.data?.substring(0, 300)}`);
 
     // 保存 conversationId 以便后续复用
     if (result.convId) {

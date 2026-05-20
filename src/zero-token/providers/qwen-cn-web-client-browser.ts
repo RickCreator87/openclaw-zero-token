@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import { chromium } from "playwright-core";
 import type { BrowserContext, Page } from "playwright-core";
 import { getHeadersWithAuth } from "../../../extensions/browser/src/browser/cdp.helpers.js";
@@ -8,7 +7,10 @@ import {
   getChromeWebSocketUrl,
   type RunningChrome,
 } from "../../../extensions/browser/src/browser/chrome.js";
-import { resolveBrowserConfig, resolveProfile } from "../../../extensions/browser/src/browser/config.js";
+import {
+  resolveBrowserConfig,
+  resolveProfile,
+} from "../../../extensions/browser/src/browser/config.js";
 import { loadConfig } from "../../config/io.js";
 import type { ModelDefinitionConfig } from "../../config/types.models.js";
 
@@ -54,9 +56,17 @@ export class QwenCNWebClientBrowser {
     this.ut = finalOptions.ut || "";
 
     if (!this.ut && this.cookie) {
-      const match = this.cookie.match(/(?:^|;\\s*)b-user-id=([^;]+)/i);
-      if (match) {
-        this.ut = match[1];
+      // Extract b-user-id from cookie string (format: "name1=val1; name2=val2")
+      const parts = this.cookie.split(";");
+      for (const part of parts) {
+        const eqIdx = part.indexOf("=");
+        if (eqIdx !== -1) {
+          const name = part.slice(0, eqIdx).trim();
+          if (name === "b-user-id") {
+            this.ut = part.slice(eqIdx + 1).trim();
+            break;
+          }
+        }
       }
     }
     this.deviceId =
@@ -250,11 +260,15 @@ export class QwenCNWebClientBrowser {
             headers: {
               "Content-Type": "application/json",
               Accept: "text/event-stream, text/plain, */*",
+              Referer: `${baseUrl}/`,
+              Origin: baseUrl,
               "x-xsrf-token": xsrfToken,
               "x-deviceid": deviceId,
               "x-platform": "pc_tongyi",
+              "x-req-from": "pc_web",
             },
             body: JSON.stringify(bodyObj),
+            credentials: "include",
           });
 
           if (!res.ok) {
