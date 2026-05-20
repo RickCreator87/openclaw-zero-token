@@ -10,6 +10,20 @@ export const MODEL_APIS = [
   "github-copilot",
   "bedrock-converse-stream",
   "ollama",
+  // Zero-token web providers (cookie/session-based, not API-key based)
+  "deepseek-web",
+  "claude-web",
+  "chatgpt-web",
+  "doubao-web",
+  "gemini-web",
+  "glm-web",
+  "glm-intl-web",
+  "grok-web",
+  "kimi-web",
+  "perplexity-web",
+  "qwen-web",
+  "qwen-cn-web",
+  "xiaomimo-web",
 ] as const;
 
 export type ModelApi = (typeof MODEL_APIS)[number];

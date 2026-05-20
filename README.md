@@ -65,14 +65,27 @@ OpenClaw Zero Token is a fork of [OpenClaw](https://github.com/openclaw/openclaw
 
 ### Tool calling
 
-All supported models can call **local tools** (`exec`, `read_file`, `list_dir`, `browser`, `apply_patch`, etc.) so that agents can run commands, read/write workspace files, and automate the browser.
+Web models can call **local tools** (`web_search`, `web_fetch`, `exec`, `read`, `write`, `message`) via prompt-injected tool definitions. Based on [arXiv:2407.04997](https://arxiv.org/html/2407.04997v1) and [ComfyUI LLM Party](https://github.com/heshengtao/comfyui_LLM_party) (5k+ stars).
 
-| Provider type                                                            | Tools | Notes                                                                  |
-| ------------------------------------------------------------------------ | ----- | ---------------------------------------------------------------------- |
-| Web (DeepSeek, Qwen, Kimi, Claude, Doubao, GLM, Grok, Xiaomi MiMo, etc.) | ✅    | Inject XML tool descriptions in `system`, parse `<tool_call>` streams. |
-| ChatGPT Web / Gemini Web / Manus API                                     | ✅    | Similar via tool descriptions + multi-turn context + `<tool_call>`.    |
-| OpenRouter / OpenAI-compatible APIs                                      | ✅    | Uses native `tools` / `tool_calls`.                                    |
-| Ollama                                                                   | ✅    | Uses native `/api/chat` tools.                                         |
+**11/13 web models support tool calling** (verified):
+
+| Model       | Tool Calling | Chat | Notes                               |
+| ----------- | ------------ | ---- | ----------------------------------- |
+| DeepSeek    | ✅           | ✅   | exec: list desktop files            |
+| Kimi        | ✅           | ✅   | All 6 tools verified                |
+| Claude      | ✅           | ✅   | web_search OK                       |
+| ChatGPT     | ✅           | ✅   | web_search OK                       |
+| Qwen CN     | ✅           | ✅   | web_search OK                       |
+| Qwen Web    | ✅           | ✅   | web_search OK                       |
+| Grok        | ✅           | ✅   | web_search OK                       |
+| Gemini      | ✅           | ⚠️   | web_search OK, DOM polling unstable |
+| Xiaomi MiMo | ✅           | ✅   | web_search OK                       |
+| GLM         | ✅           | ✅   | Tool calling and chat OK            |
+| GLM Intl    | ✅           | ✅   | Tool calling and chat OK            |
+| Doubao      | ❌           | ⚠️   | Excluded (stream parser limitation) |
+| Perplexity  | —            | ✅   | Search engine, no tool injection    |
+
+The middleware (`src/zero-token/tool-calling/`) only injects tool prompts when keywords in the user message suggest a tool action — normal chat stays short to reduce ban risk.
 
 Agent file access is restricted by the configured **workspace** directory (see `agents.defaults.workspace`).
 
@@ -186,69 +199,48 @@ Daily:
 
 ### Installation
 
-#### Clone the repo
+#### Clone and build
 
 ```bash
 git clone https://github.com/linuxhsj/openclaw-zero-token.git
 cd openclaw-zero-token
-```
-
-#### Install dependencies
-
-```bash
 pnpm install
-```
-
-#### Step 1: Build
-
-```bash
 pnpm build
 pnpm ui:build
 ```
 
-#### Step 2: Configure authentication
+#### Configure authentication
 
 ```bash
-# (Optional but recommended before the very first ./onboard.sh webauth)
-# Copy the example config to your local state directory:
-# cp .openclaw-state.example/openclaw.json .openclaw-upstream-state/openclaw.json
-
-# On first run, onboard.sh will prompt whether to copy the configuration file, just select yes.
-# It will copy .openclaw-state.example/openclaw.json to .openclaw-upstream-state/openclaw.json;
-# for non-first runs, there's no need to copy these configuration files.
-
-# Start Chrome in debug mode
+# Start Chrome in debug mode (keep this terminal open)
 ./start-chrome-debug.sh
 
-# IMPORTANT: Do not close this terminal, otherwise subsequent steps will fail.
-# Keep this terminal open throughout the process.
+# Log into each web model in the browser tabs that open
+# (DeepSeek, Qwen, Kimi, Claude, ChatGPT, Gemini, Grok, etc.)
 
-# Log into each web model once (for example DeepSeek)
-#   https://chat.deepseek.com/
-
-# Run onboarding wizard
-# IMPORTANT: Open a new terminal for this step (do not use the same terminal as the previous step,
-# because the ./start-chrome-debug.sh terminal needs to stay open).
+# In a NEW terminal, run the auth wizard
 ./onboard.sh webauth
-
-
-# Or use the built version
-node openclaw.mjs onboard
-
-# Example DeepSeek flow in the wizard:
-# ? Auth provider: DeepSeek (Browser Login)
-#
-# ? DeepSeek Auth Mode:
-#   > Automated Login (Recommended)   # capture cookies/tokens automatically
-
-# Once you see that auth succeeded, you are done.
-# To add more providers later, just run ./onboard.sh webauth again.
 ```
 
-When the wizard prints **Authorization complete** (or per-provider success lines), you are finished: the shell prompt should return. If the Node process **does not exit** (known issue with some browser CDP sessions), press **Ctrl+C**—credentials and config updates are already written by then.
+#### Start the gateway
 
-Follow the prompts (choose e.g. **DeepSeek (Browser Login)** and **Automated Login (Recommended)**).  
-To add more providers later, just run `./onboard.sh webauth` again.
+```bash
+./server.sh
+```
+
+Open the Web UI at the URL printed in the terminal.
+
+#### Clean rebuild (if you get `ERR_MODULE_NOT_FOUND`)
+
+```bash
+rm -rf dist dist-runtime node_modules
+pnpm install
+pnpm build
+pnpm ui:build
+./server.sh restart
+```
+
+> **Note:** Always use `pnpm build` (not `npm run build`). If you see hash mismatch errors like `Cannot find module dist/xxx-HASH.js`, do a clean rebuild as shown above.
 
 #### Step 3: Start the gateway
 

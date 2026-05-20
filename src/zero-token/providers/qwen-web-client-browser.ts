@@ -8,7 +8,10 @@ import {
   getChromeWebSocketUrl,
   type RunningChrome,
 } from "../../../extensions/browser/src/browser/chrome.js";
-import { resolveBrowserConfig, resolveProfile } from "../../../extensions/browser/src/browser/config.js";
+import {
+  resolveBrowserConfig,
+  resolveProfile,
+} from "../../../extensions/browser/src/browser/config.js";
 import { loadConfig } from "../../config/io.js";
 import type { ModelDefinitionConfig } from "../../config/types.models.js";
 
@@ -378,8 +381,8 @@ export class QwenWebClientBrowser {
   async discoverModels(): Promise<ModelDefinitionConfig[]> {
     return [
       {
-        id: "qwen-max",
-        name: "Qwen Max",
+        id: "qwen3.5-plus",
+        name: "Qwen 3.5 Plus",
         api: "qwen-web",
         reasoning: false,
         input: ["text"],

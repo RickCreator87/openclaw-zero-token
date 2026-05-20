@@ -320,8 +320,14 @@ export function createDeepseekWebStreamFn(cookieOrJson: string): StreamFn {
             return;
           }
 
-          // Junk token filtering
-          const JUNK_TOKENS = ["<｜end▁of▁thinking｜>", "<|endoftext|>"];
+          // Junk token filtering (multiple Unicode variants of end_of_thinking)
+          const JUNK_TOKENS = [
+            "<｜end▁of▁thinking｜>",
+            "<|end▁of▁thinking|>",
+            "<｜end_of_thinking｜>",
+            "<|end_of_thinking|>",
+            "<|endoftext|>",
+          ];
           if (JUNK_TOKENS.includes(delta)) {
             console.log(`[DeepseekWebStream] Filtering junk token: ${delta}`);
             return;
@@ -339,9 +345,12 @@ export function createDeepseekWebStreamFn(cookieOrJson: string): StreamFn {
             const thinkEndMatch = tagBuffer.match(/<\/(?:think(?:ing)?|thought)\b[^<>]*>/i);
             const finalStartMatch = tagBuffer.match(/<final\b[^<>]*>/i);
             const finalEndMatch = tagBuffer.match(/<\/final\b[^<>]*>/i);
-            const toolCallStartMatch = tagBuffer.match(
-              /<tool_call\s+(?:id=['"]?([^'"]+)['"]?\s+)?name=['"]?([^'"]+)['"]?\s*>/i,
-            );
+            // Support both <tool_call id="x" name="y"> and <tool_call name="y" id="x"> orders,
+            // as well as id-only or name-only variants from DeepSeek
+            const toolCallStartMatch =
+              tagBuffer.match(
+                /<tool_call\s+(?:id=['"]?([^'"]+)['"]?\s+)?name=['"]?([^'"]+)['"]?(?:\s+id=['"]?([^'"]+)['"]?)?\s*>/i,
+              ) || tagBuffer.match(/<tool_call\s+id=['"]?([^'"]+)['"]?\s*>/i);
             const toolCallEndMatch = tagBuffer.match(/<\/tool_call\b[^<>]*>/i);
             const replyMatch = tagBuffer.match(/\[\[reply_to_current\]\]/i);
             const malformedThinkMatch = tagBuffer.match(/\n?think\s*>/i);
@@ -372,8 +381,10 @@ export function createDeepseekWebStreamFn(cookieOrJson: string): StreamFn {
                 type: "tool_call_start",
                 idx: toolCallStartMatch ? toolCallStartMatch.index! : -1,
                 len: toolCallStartMatch ? toolCallStartMatch[0].length : 0,
-                id: toolCallStartMatch ? toolCallStartMatch[1] : null,
-                name: toolCallStartMatch ? toolCallStartMatch[2] : "",
+                id: toolCallStartMatch ? toolCallStartMatch[3] || toolCallStartMatch[1] : null,
+                name: toolCallStartMatch
+                  ? toolCallStartMatch[2] || toolCallStartMatch[1] || ""
+                  : "",
               },
               {
                 type: "tool_call_end",
@@ -433,7 +444,20 @@ export function createDeepseekWebStreamFn(cookieOrJson: string): StreamFn {
                   try {
                     part.arguments = JSON.parse(argStr);
                   } catch {
-                    part.arguments = { raw: argStr };
+                    // Fallback: parse XML-style arguments like <path>...</path><content>...</content>
+                    const xmlArgs: Record<string, unknown> = {};
+                    const xmlTagPattern = /<([a-zA-Z_][a-zA-Z0-9_]*)\s*[^>]*>([\s\S]*?)<\/\1>/g;
+                    let xmlMatch;
+                    while ((xmlMatch = xmlTagPattern.exec(argStr)) !== null) {
+                      const xmlKey = xmlMatch[1];
+                      const xmlValue = xmlMatch[2].trim();
+                      try {
+                        xmlArgs[xmlKey] = JSON.parse(xmlValue);
+                      } catch {
+                        xmlArgs[xmlKey] = xmlValue;
+                      }
+                    }
+                    part.arguments = Object.keys(xmlArgs).length > 0 ? xmlArgs : { raw: argStr };
                   }
                   stream.push({
                     type: "toolcall_end",
@@ -462,7 +486,7 @@ export function createDeepseekWebStreamFn(cookieOrJson: string): StreamFn {
                   emitDelta("text", tagBuffer);
                 }
                 tagBuffer = "";
-              } else if (lastAngle > 0) {
+              } else if (lastAngle >= 0) {
                 const safe = tagBuffer.slice(0, lastAngle);
                 if (currentMode === "thinking") {
                   emitDelta("thinking", safe);
@@ -552,6 +576,25 @@ export function createDeepseekWebStreamFn(cookieOrJson: string): StreamFn {
                     emitDelta("thinking", searchMsg);
                   } else {
                     emitDelta("text", searchMsg);
+                  }
+                }
+                return;
+              }
+
+              // 2.8 data.v as direct array (DeepSeek sometimes returns this format)
+              if (Array.isArray(data.v)) {
+                for (const frag of data.v) {
+                  if (frag.type === "THINKING" || frag.type === "reasoning") {
+                    pushDelta(frag.content || "", "thinking");
+                  } else if (
+                    frag.p === "quasi_status" &&
+                    frag.v === "FINISHED" &&
+                    currentMode === "tool_call"
+                  ) {
+                    // DeepSeek may omit </tool_call> end tag; synthesize it on FINISHED signal
+                    pushDelta(`</${currentToolName || "tool_call"}>`);
+                  } else if (frag.content) {
+                    pushDelta(frag.content);
                   }
                 }
                 return;

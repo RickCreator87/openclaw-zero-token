@@ -35,6 +35,34 @@ const defaultImportPiSdk = () => import("./pi-model-discovery-runtime.js");
 let importPiSdk = defaultImportPiSdk;
 let modelSuppressionPromise: Promise<typeof import("./model-suppression.runtime.js")> | undefined;
 
+/** Known web provider IDs (cookie/session-based, not API-key based). */
+const KNOWN_WEB_PROVIDER_IDS = new Set([
+  "deepseek-web",
+  "claude-web",
+  "chatgpt-web",
+  "doubao-web",
+  "gemini-web",
+  "glm-web",
+  "glm-intl-web",
+  "grok-web",
+  "kimi-web",
+  "perplexity-web",
+  "qwen-web",
+  "qwen-cn-web",
+  "xiaomimo-web",
+]);
+
+/**
+ * Returns true when the given provider ID looks like a web provider that has
+ * cookie/session-based auth instead of an API key.
+ */
+function isWebProvider(providerId: string): boolean {
+  return (
+    KNOWN_WEB_PROVIDER_IDS.has(providerId) ||
+    (providerId.endsWith("-web") && !providerId.includes(" "))
+  );
+}
+
 const NON_PI_NATIVE_MODEL_PROVIDERS = new Set(["deepseek", "kilocode"]);
 
 function shouldLogModelCatalogTiming(): boolean {
@@ -222,6 +250,8 @@ export async function loadModelCatalog(params?: {
       }
       mergeConfiguredOptInProviderModels({ config: cfg, models });
       logStage("configured-models-merged", `entries=${models.length}`);
+      mergeWhitelistedWebModels({ config: cfg, models });
+      logStage("whitelisted-web-models-merged", `entries=${models.length}`);
       const supplemental = await augmentModelCatalogWithProviderPlugins({
         config: cfg,
         env: process.env,
@@ -286,6 +316,111 @@ export function modelSupportsVision(entry: ModelCatalogEntry | undefined): boole
  */
 export function modelSupportsDocument(entry: ModelCatalogEntry | undefined): boolean {
   return entry?.input?.includes("document") ?? false;
+}
+
+/**
+ * Static metadata for known web provider models.
+ * Used to populate the model catalog from the agents.defaults.models whitelist
+ * when no explicit discovery source (pi-sdk, plugin, config) provides an entry.
+ */
+const KNOWN_WEB_MODEL_ENTRIES: ModelCatalogEntry[] = [
+  // deepseek-web
+  { id: "deepseek-chat", name: "DeepSeek V3", provider: "deepseek-web", contextWindow: 64000 },
+  {
+    id: "deepseek-reasoner",
+    name: "DeepSeek R1",
+    provider: "deepseek-web",
+    contextWindow: 64000,
+    reasoning: true,
+  },
+  // claude-web
+  { id: "claude-sonnet-4-6", name: "Claude Sonnet", provider: "claude-web", contextWindow: 200000 },
+  { id: "claude-sonnet-4-6", name: "Claude Sonnet", provider: "claude-web", contextWindow: 200000 },
+  { id: "claude-haiku-4-6", name: "Claude Sonnet", provider: "claude-web", contextWindow: 200000 },
+  // chatgpt-web
+  { id: "gpt-4", name: "ChatGPT Web", provider: "chatgpt-web", contextWindow: 128000 },
+  // doubao-web
+  { id: "doubao-seed-2.0", name: "Doubao Browser", provider: "doubao-web", contextWindow: 64000 },
+  // gemini-web
+  { id: "gemini-pro", name: "Gemini Pro", provider: "gemini-web", contextWindow: 32000 },
+  { id: "gemini-ultra", name: "Gemini Ultra", provider: "gemini-web", contextWindow: 32000 },
+  // glm-web (国内)
+  { id: "glm-4-plus", name: "GLM Web", provider: "glm-web", contextWindow: 128000 },
+  // glm-intl-web (国际)
+  { id: "glm-4-plus", name: "GLM-4 Plus (Intl)", provider: "glm-intl-web", contextWindow: 128000 },
+  {
+    id: "glm-4-think",
+    name: "GLM-4 Think",
+    provider: "glm-intl-web",
+    contextWindow: 128000,
+    reasoning: true,
+  },
+  // grok-web
+  { id: "grok-2", name: "Grok Web", provider: "grok-web", contextWindow: 32000 },
+  // kimi-web
+  { id: "moonshot-v1-32k", name: "Kimi Web", provider: "kimi-web", contextWindow: 32000 },
+  // perplexity-web
+  {
+    id: "perplexity-web",
+    name: "Perplexity Web",
+    provider: "perplexity-web",
+    contextWindow: 128000,
+  },
+  // qwen-web
+  { id: "qwen-max", name: "Qwen Web", provider: "qwen-web", contextWindow: 32000 },
+  // qwen-cn-web
+  { id: "qwen-turbo", name: "Qwen CN Web", provider: "qwen-cn-web", contextWindow: 128000 },
+  // xiaomimo-web
+  { id: "xiaomimo-chat", name: "Xiaomi Mimo Web", provider: "xiaomimo-web", contextWindow: 128000 },
+];
+
+/**
+ * Merges web models into the catalog based on the agents.defaults.models whitelist.
+ * The whitelist (e.g. `deepseek-web/deepseek-chat`) acts as a user-visible gate;
+ * if a whitelisted model has no entry from pi-sdk/plugins/config, we synthesize one
+ * from the static KNOWN_WEB_MODEL_ENTRIES table so it appears in the catalog.
+ */
+function mergeWhitelistedWebModels(params: {
+  config: OpenClawConfig;
+  models: ModelCatalogEntry[];
+}): void {
+  const whitelist = params.config.agents?.defaults?.models;
+  if (!whitelist || typeof whitelist !== "object") {
+    return;
+  }
+
+  const seen = new Set(
+    params.models.map(
+      (entry) => `${entry.provider.toLowerCase().trim()}::${entry.id.toLowerCase().trim()}`,
+    ),
+  );
+
+  for (const [modelKey, modelValue] of Object.entries(whitelist)) {
+    if (!modelKey.includes("/")) {
+      continue;
+    }
+    const [providerId, modelId] = modelKey.split("/", 2);
+    if (!isWebProvider(providerId)) {
+      continue;
+    }
+    const key = `${providerId.toLowerCase()}::${modelId.toLowerCase()}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    // Find a static entry for this provider + model
+    const staticEntry = KNOWN_WEB_MODEL_ENTRIES.find(
+      (e) => e.provider === providerId && e.id.toLowerCase() === modelId.toLowerCase(),
+    );
+    if (!staticEntry) {
+      continue;
+    }
+    const alias =
+      modelValue && typeof modelValue === "object"
+        ? ((modelValue as { alias?: string }).alias ?? staticEntry.name)
+        : staticEntry.name;
+    params.models.push({ ...staticEntry, name: alias });
+    seen.add(key);
+  }
 }
 
 /**

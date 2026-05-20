@@ -36,6 +36,9 @@ const NO_GATEWAY_TIMEOUT_MS = 2_147_000_000;
 export type AgentCliOpts = {
   message: string;
   agent?: string;
+  /** Gateway `agent` RPC: model override for this turn (`provider/model-id` or model id with `--provider`). */
+  model?: string;
+  provider?: string;
   to?: string;
   sessionId?: string;
   thinking?: string;
@@ -120,6 +123,8 @@ export async function agentViaGatewayCommand(opts: AgentCliOpts, runtime: Runtim
 
   const channel = normalizeMessageChannel(opts.channel);
   const idempotencyKey = opts.runId?.trim() || randomIdempotencyKey();
+  const modelOverride = opts.model?.trim() || undefined;
+  const providerOverride = opts.provider?.trim() || undefined;
 
   const response = await withProgress(
     {
@@ -133,6 +138,8 @@ export async function agentViaGatewayCommand(opts: AgentCliOpts, runtime: Runtim
         params: {
           message: body,
           agentId,
+          ...(modelOverride ? { model: modelOverride } : {}),
+          ...(providerOverride ? { provider: providerOverride } : {}),
           to: opts.to,
           replyTo: opts.replyTo,
           sessionId: opts.sessionId,

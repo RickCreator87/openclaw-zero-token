@@ -99,7 +99,7 @@ case "${1:-}" in
     echo ""
     echo "⚠️  提示: 确保 Chrome 调试模式已启动 (./start-chrome-debug.sh)"
     echo ""
-    "$NODE" "$SCRIPT_DIR/openclaw.mjs" webauth
+    "$NODE" "$SCRIPT_DIR/openclaw.mjs" onboard webauth
     ;;
   onboard)
     echo "启动官方 onboard 向导..."

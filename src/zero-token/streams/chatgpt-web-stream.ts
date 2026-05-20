@@ -4,30 +4,12 @@ import {
   type AssistantMessage,
   type TextContent,
   type ToolCall,
-  type ToolResultMessage,
 } from "@mariozechner/pi-ai";
 import {
   ChatGPTWebClientBrowser,
   type ChatGPTWebClientOptions,
 } from "../providers/chatgpt-web-client-browser.js";
-
-// Helper to strip messages for web providers
-function stripForWebProvider(prompt: string): string {
-  return prompt;
-}
-
-// Helper to build XML tool prompt section
-function buildXmlToolPromptSection(tools: unknown[]): string {
-  if (!tools || tools.length === 0) {
-    return "";
-  }
-  return "\n## Tool Use Instructions\n";
-}
-
-// Helper to get XML tool reminder
-function getXmlToolReminder(): string {
-  return "\nRemember to use tools when needed.";
-}
+import { stripInboundMeta } from "./strip-inbound-meta.js";
 
 const conversationMap = new Map<string, string>();
 const parentMessageMap = new Map<string, string>();
@@ -58,85 +40,11 @@ export function createChatGPTWebStreamFn(cookieOrJson: string): StreamFn {
         let parentMessageId = parentMessageMap.get(sessionKey);
 
         const messages = context.messages || [];
-        const systemPrompt = (context as unknown as { systemPrompt?: string }).systemPrompt || "";
-        const tools = context.tools || [];
-        const toolPrompt = buildXmlToolPromptSection(tools);
 
+        // ChatGPT web uses DOM simulation (typing into the browser input box).
+        // Only send the last user message to avoid overwhelming the input.
         let prompt = "";
-        if (tools.length > 0) {
-          if (!conversationId) {
-            const historyParts: string[] = [];
-            let systemPromptContent = systemPrompt;
-            if (toolPrompt) {
-              systemPromptContent += toolPrompt;
-            }
-            if (systemPromptContent && !messages.some((m) => (m.role as string) === "system")) {
-              historyParts.push(`System: ${systemPromptContent}`);
-            }
-            for (const m of messages) {
-              const role = m.role === "user" || m.role === "toolResult" ? "User" : "Assistant";
-              let content = "";
-              if (m.role === "toolResult") {
-                const tr = m as unknown as ToolResultMessage;
-                let resultText = "";
-                if (Array.isArray(tr.content)) {
-                  for (const part of tr.content) {
-                    if (part.type === "text") {
-                      resultText += part.text;
-                    }
-                  }
-                }
-                content = `\n<tool_response id="${tr.toolCallId}" name="${tr.toolName}">\n${resultText}\n</tool_response>\n`;
-              } else if (Array.isArray(m.content)) {
-                for (const part of m.content) {
-                  if (part.type === "text") {
-                    content += part.text;
-                  } else if (part.type === "toolCall") {
-                    const tc = part;
-                    content += `<tool_call id="${tc.id}" name="${tc.name}">${JSON.stringify(tc.arguments)}</tool_call>`;
-                  }
-                }
-              } else {
-                content = String(m.content);
-              }
-              if (m.role === "user" && content) {
-                content = stripForWebProvider(content) || content;
-              }
-              historyParts.push(`${role}: ${content}`);
-            }
-            prompt = historyParts.join("\n\n");
-          } else {
-            const lastMsg = messages[messages.length - 1];
-            if (lastMsg?.role === "toolResult") {
-              const tr = lastMsg as unknown as ToolResultMessage;
-              let resultText = "";
-              if (Array.isArray(tr.content)) {
-                for (const part of tr.content) {
-                  if (part.type === "text") {
-                    resultText += part.text;
-                  }
-                }
-              }
-              prompt = `\n<tool_response id="${tr.toolCallId}" name="${tr.toolName}">\n${resultText}\n</tool_response>\n\nPlease proceed based on this tool result.`;
-            } else {
-              const lastUserMessage = [...messages].toReversed().find((m) => m.role === "user");
-              if (lastUserMessage) {
-                if (typeof lastUserMessage.content === "string") {
-                  prompt = lastUserMessage.content;
-                } else if (Array.isArray(lastUserMessage.content)) {
-                  prompt = (lastUserMessage.content as TextContent[])
-                    .filter((part) => part.type === "text")
-                    .map((part) => part.text)
-                    .join("");
-                }
-                prompt = stripForWebProvider(prompt) || prompt;
-              }
-            }
-            if (toolPrompt) {
-              prompt += getXmlToolReminder();
-            }
-          }
-        } else {
+        {
           const lastUserMessage = [...messages].toReversed().find((m) => m.role === "user");
           if (lastUserMessage) {
             if (typeof lastUserMessage.content === "string") {
@@ -154,16 +62,14 @@ export function createChatGPTWebStreamFn(cookieOrJson: string): StreamFn {
           throw new Error("No message found to send to ChatGPT API");
         }
 
-        const cleanPrompt = stripForWebProvider(prompt);
+        const cleanPrompt = stripInboundMeta(prompt);
         if (!cleanPrompt) {
           throw new Error("No message content to send after stripping metadata");
         }
 
         console.log(`[ChatGPTWebStream] Starting run for session: ${sessionKey}`);
         console.log(`[ChatGPTWebStream] Conversation ID: ${conversationId || "new"}`);
-        console.log(
-          `[ChatGPTWebStream] Tools: ${tools.length}, prompt length: ${cleanPrompt.length}`,
-        );
+        console.log(`[ChatGPTWebStream] prompt length: ${cleanPrompt.length}`);
 
         const responseStream = await client.chatCompletions({
           conversationId: conversationId || "new",
@@ -272,7 +178,8 @@ export function createChatGPTWebStreamFn(cookieOrJson: string): StreamFn {
           if (!delta) {
             return;
           }
-          if (tools.length === 0) {
+          // DOM simulation: always use simple text path (no tool parsing)
+          {
             if (contentParts.length === 0) {
               contentParts[0] = { type: "text", text: "" };
               stream.push({ type: "text_start", contentIndex: 0, partial: createPartial() });
@@ -456,7 +363,7 @@ export function createChatGPTWebStreamFn(cookieOrJson: string): StreamFn {
           }
         }
 
-        if (tools.length > 0 && tagBuffer) {
+        if (tagBuffer) {
           const mode = currentMode as "text" | "toolcall";
           if (mode === "toolcall") {
             emitDelta("toolcall", tagBuffer);
@@ -497,7 +404,7 @@ export function createChatGPTWebStreamFn(cookieOrJson: string): StreamFn {
 
         stream.push({
           type: "done",
-          reason: "stop",
+          reason: stopReason,
           message: assistantMessage,
         });
       } catch (err) {
@@ -523,7 +430,7 @@ export function createChatGPTWebStreamFn(cookieOrJson: string): StreamFn {
             },
             timestamp: Date.now(),
           },
-        } as any);
+        } as unknown as Parameters<typeof stream.push>[0]);
       } finally {
         stream.end();
       }

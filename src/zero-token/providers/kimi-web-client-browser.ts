@@ -7,12 +7,17 @@ import {
   getChromeWebSocketUrl,
   type RunningChrome,
 } from "../../../extensions/browser/src/browser/chrome.js";
-import { resolveBrowserConfig, resolveProfile } from "../../../extensions/browser/src/browser/config.js";
+import {
+  resolveBrowserConfig,
+  resolveProfile,
+} from "../../../extensions/browser/src/browser/config.js";
 import { loadConfig } from "../../config/io.js";
 import type { ModelDefinitionConfig } from "../../config/types.models.js";
 
 export interface KimiWebClientOptions {
-  cookie: string;
+  cookie?: string;
+  accessToken?: string;
+  refreshToken?: string;
   userAgent?: string;
 }
 
@@ -22,6 +27,8 @@ export interface KimiWebClientOptions {
  */
 export class KimiWebClientBrowser {
   private cookie: string;
+  private accessToken: string;
+  private refreshToken: string;
   private userAgent: string;
   private baseUrl = "https://www.kimi.com";
   private browser: BrowserContext | null = null;
@@ -32,14 +39,20 @@ export class KimiWebClientBrowser {
     if (typeof options === "string") {
       try {
         const parsed = JSON.parse(options) as KimiWebClientOptions;
-        this.cookie = parsed.cookie;
+        this.cookie = parsed.cookie || "";
+        this.accessToken = parsed.accessToken || "";
+        this.refreshToken = parsed.refreshToken || "";
         this.userAgent = parsed.userAgent || "Mozilla/5.0";
       } catch {
         this.cookie = options;
+        this.accessToken = "";
+        this.refreshToken = "";
         this.userAgent = "Mozilla/5.0";
       }
     } else {
-      this.cookie = options.cookie;
+      this.cookie = options.cookie || "";
+      this.accessToken = options.accessToken || "";
+      this.refreshToken = options.refreshToken || "";
       this.userAgent = options.userAgent || "Mozilla/5.0";
     }
   }
@@ -162,9 +175,13 @@ export class KimiWebClientBrowser {
     const { browser, page } = await this.ensureBrowser();
 
     const cookies = await browser.cookies([this.baseUrl]);
-    const kimiAuth = cookies.find((c) => c.name === "kimi-auth")?.value;
-    if (!kimiAuth) {
-      throw new Error("Kimi: 未找到 kimi-auth Cookie，请在 Chrome 中登录 www.kimi.com 后再试");
+    const kimiAuthCookie = cookies.find((c) => c.name === "kimi-auth")?.value;
+    // Prefer accessToken (from localStorage) over kimi-auth cookie
+    const authToken = this.accessToken || kimiAuthCookie;
+    if (!authToken) {
+      throw new Error(
+        "Kimi: 未找到认证凭证（accessToken 或 kimi-auth Cookie）。请重新运行 ./onboard.sh 刷新登录状态。",
+      );
     }
 
     const result = await page.evaluate(
@@ -233,8 +250,22 @@ export class KimiWebClientBrowser {
                   obj.error.message || obj.error.code || JSON.stringify(obj.error).slice(0, 200),
               };
             }
-            if (obj.block?.text?.content && ["set", "append"].includes(obj.op || "")) {
+            // Collect text: only from "append" or "set" ops on assistant response blocks.
+            // "append" = incremental streaming chunk, "set" = full replacement.
+            // Skip other ops (like "init" which may echo back the user prompt).
+            const op = obj.op || "";
+            if (obj.block?.text?.content && (op === "append" || op === "set")) {
               texts.push(obj.block.text.content);
+            } else if (obj.text?.content && (op === "append" || op === "set")) {
+              texts.push(obj.text.content);
+            }
+            // If no op field at all but there's a "message" with role=assistant, take it
+            if (!op && obj.message?.role === "assistant" && obj.message?.blocks) {
+              for (const blk of obj.message.blocks) {
+                if (blk.text?.content) {
+                  texts.push(blk.text.content);
+                }
+              }
             }
             if (obj.done) {
               break;
@@ -249,7 +280,7 @@ export class KimiWebClientBrowser {
       {
         baseUrl: this.baseUrl,
         message: params.message,
-        kimiAuthToken: kimiAuth,
+        kimiAuthToken: authToken,
         scenario: params.model.includes("search")
           ? "SCENARIO_SEARCH"
           : params.model.includes("research")
