@@ -63,13 +63,13 @@ importers:
         version: 1.2.0-beta.3
       '@mariozechner/pi-agent-core':
         specifier: 0.57.1
-        version: 0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
+        version: 0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.20.1)(zod@4.3.6)
       '@mariozechner/pi-ai':
         specifier: 0.57.1
-        version: 0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
+        version: 0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.20.1)(zod@4.3.6)
       '@mariozechner/pi-coding-agent':
         specifier: 0.57.1
-        version: 0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
+        version: 0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.20.1)(zod@4.3.6)
       '@mariozechner/pi-tui':
         specifier: 0.57.1
         version: 0.57.1
@@ -192,7 +192,7 @@ importers:
         version: 7.24.0
       ws:
         specifier: ^8.19.0
-        version: 8.19.0
+        version: 8.20.1
       yaml:
         specifier: ^2.8.2
         version: 2.8.3
@@ -474,7 +474,7 @@ importers:
         version: 0.34.48
       ws:
         specifier: ^8.20.0
-        version: 8.20.0
+        version: 8.20.1
     devDependencies:
       openclaw:
         specifier: workspace:*
@@ -498,7 +498,7 @@ importers:
         version: 0.34.48
       openai:
         specifier: ^6.33.0
-        version: 6.33.0(ws@8.20.1)(zod@4.4.3)
+        version: 6.33.0(ws@8.21.0)(zod@4.4.3)
 
   extensions/microsoft:
     dependencies:
@@ -650,7 +650,7 @@ importers:
         version: 14.0.3
       ws:
         specifier: ^8.20.0
-        version: 8.20.0
+        version: 8.20.1
     devDependencies:
       openclaw:
         specifier: workspace:*
@@ -725,7 +725,7 @@ importers:
         specifier: 3.0.1
         version: 3.0.1
       dompurify:
-        specifier: ^3.3.3
+        specifier: ^3.4.0
         version: 3.4.0
       lit:
         specifier: ^3.3.2
@@ -2872,6 +2872,9 @@ packages:
   '@protobufjs/eventemitter@1.1.0':
     resolution: {integrity: sha512-j9ednRT81vYJ9OfVuXG6ERSTdEL1xVsNgqpkxMsbIabzSo3goCjDIveeGv5d03om39ML71RdmrGNjG5SReBP/Q==}
 
+  '@protobufjs/eventemitter@1.1.1':
+    resolution: {integrity: sha512-vW1GmwMZNnL+gMRaovlh9yZX74kc+TTU3FObkkurpMaRtBfLP3ldjS9KQWlwZgraRE0+dheEEoAxdzcJQ8eXZg==}
+
   '@protobufjs/fetch@1.1.0':
     resolution: {integrity: sha512-lljVXpqXebpsijW71PZaCYeIcE5on1w5DlQy5WH6GLbFryLUrBD4932W/E2BSpfRJWseIL4v/KPgBFxDOIdKpQ==}
 
@@ -3786,12 +3789,12 @@ packages:
   '@swc/helpers@0.5.21':
     resolution: {integrity: sha512-jI/VAmtdjB/RnI8GTnokyX7Ug8c+g+ffD6QRLa6XQewtnGyukKkKSk3wLTM3b5cjt1jNh9x0jfVlagdN2gDKQg==}
 
-  '@thi.ng/bitstream@2.4.49':
-    resolution: {integrity: sha512-Cy4xOdJlhk80pZEBdkw44incZJWUhjIQZntgLEZ/VcrC18MW11KX18JDxUHdNhZ+82vIRJTlJOeOQlUjVVSnNw==}
+  '@thi.ng/bitstream@2.4.51':
+    resolution: {integrity: sha512-oFEsQLBq7FT7DF9GZaF5DFxkvWq1r0Hc/QFLOiiADvgDC0+sp58x5+fJEvvB9uRR1BBIF4imkWWRQlmblM8mrQ==}
     engines: {node: '>=18'}
 
-  '@thi.ng/errors@2.6.11':
-    resolution: {integrity: sha512-l5eXCzZuHKyz2Lcf/i0JfgQeZ1kL6rTQ2oHfivNG5GxBqRrLfDT1ZJyj3DZx37gm6tGUDIOTSg4kF3ZXhqjxyA==}
+  '@thi.ng/errors@2.6.13':
+    resolution: {integrity: sha512-npD5PC2w09SOVEUt/G/9e5fkwX7bLtSEFqY1Jhg7WrM+JK8Ytgdc8qKSmAMds5y6n2u73hSeWjZ4iIt+UsII6A==}
     engines: {node: '>=18'}
 
   '@tinyhttp/content-disposition@2.2.4':
@@ -4126,6 +4129,10 @@ packages:
   '@whiskeysockets/baileys@7.0.0-rc.9':
     resolution: {integrity: sha512-YFm5gKXfDP9byCXCW3OPHKXLzrAKzolzgVUlRosHHgwbnf2YOO3XknkMm6J7+F0ns8OA0uuSBhgkRHTDtqkacw==}
     engines: {node: '>=20.0.0'}
+    deprecated: |-
+      This version is affected by a zero-day vulnerability that allows spoofing of messages, please update to
+        the latest versions (6.7.22^ or 7.0.0-rc12^)! For more information, check out the public advisory at
+        https://github.com/WhiskeySockets/Baileys/security/advisories/GHSA-qvv5-jq5g-4cgg
     peerDependencies:
       audio-decode: ^2.1.3
       jimp: ^1.6.0
@@ -5794,8 +5801,8 @@ packages:
     resolution: {integrity: sha512-gBVjCaqDlRUk0EwoPNKzIr9KkS9041G/q31IBShPs1Xz6UTA+EXdZADbzqAJQrpDRq71CIMnOP5VMut3SL0z5Q==}
     engines: {node: ^18 || ^20 || >= 21}
 
-  node-addon-api@8.7.0:
-    resolution: {integrity: sha512-9MdFxmkKaOYVTV+XVRG8ArDwwQ77XIgIPyKASB1k3JPq3M8fGQQQE3YpMOrKm6g//Ktx8ivZr8xo1Qmtqub+GA==}
+  node-addon-api@8.8.0:
+    resolution: {integrity: sha512-c5Ko1fZJIJmzhFIkhRN76WTq+fC6tWnGy9CXA0fA+XygsWZmEwG8vmbkNqxMyoaa0Tin4djul49NzdVcJJcjeA==}
     engines: {node: ^18 || ^20 || >= 21}
 
   node-api-headers@1.8.0:
@@ -6191,8 +6198,8 @@ packages:
     resolution: {integrity: sha512-CvexbZtbov6jW2eXAvLukXjXUW1TzFaivC46BpWc/3BpcCysb5Vffu+B3XHMm8lVEuy2Mm4XGex8hBSg1yapPg==}
     engines: {node: '>=12.0.0'}
 
-  protobufjs@7.6.0:
-    resolution: {integrity: sha512-LtESOsMPTZgyYtwxhvdgdjGL0HmXEaRA/hVD6sol4zA60hVXXXP/SGmxnqDbgGE8gy7pYex7cym+5vYPcmaXBQ==}
+  protobufjs@7.6.1:
+    resolution: {integrity: sha512-4K0myLaWL5EteuSAro91EGFgcfVgxb64Jx+7oDAY6GOkXD4M69yuSEljNcInGVCA5sOPxmZ/EqDLj2x0Q0+Ygg==}
     engines: {node: '>=12.0.0'}
 
   proxy-addr@2.0.7:
@@ -6464,8 +6471,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  semver@7.8.0:
-    resolution: {integrity: sha512-AcM7dV/5ul4EekoQ29Agm5vri8JNqRyj39o0qpX6vDF2GZrtutZl5RwgD1XnZjiTAfncsJhMI48QQH3sN87YNA==}
+  semver@7.8.1:
+    resolution: {integrity: sha512-rkVq3IXh+4FDGch+KwzX3aV9W3kO54GyEgpvBzSyctDA6Xtd7RJQV1xmXbeQp5v7+VzLOfVqiutSE6GICgPFvg==}
     engines: {node: '>=10'}
     hasBin: true
 
@@ -7244,6 +7251,18 @@ packages:
 
   ws@8.20.1:
     resolution: {integrity: sha512-It4dO0K5v//JtTXuPkfEOaI3uUN87iYPnqo/ZzqCoG3g8uhA66QUMs/SrM0YK7/NAu+r4LMh/9dq2A7k+rHs+w==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
+  ws@8.21.0:
+    resolution: {integrity: sha512-Vsp28b7DRcimFQvrqu2Wek3z1iYxDCWqHYB8Qsnk/S4RfaCQzPGPyBNuVjJV3cd6UiKtUtp6sNM77gWvzcCH+g==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -8456,13 +8475,13 @@ snapshots:
 
   '@d-fischer/connection@9.0.0':
     dependencies:
-      '@d-fischer/isomorphic-ws': 7.0.2(ws@8.20.0)
+      '@d-fischer/isomorphic-ws': 7.0.2(ws@8.21.0)
       '@d-fischer/logger': 4.2.4
       '@d-fischer/shared-utils': 3.6.4
       '@d-fischer/typed-event-emitter': 3.3.3
       '@types/ws': 8.18.1
       tslib: 2.8.1
-      ws: 8.20.0
+      ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -8473,9 +8492,9 @@ snapshots:
 
   '@d-fischer/escape-string-regexp@5.0.0': {}
 
-  '@d-fischer/isomorphic-ws@7.0.2(ws@8.20.0)':
+  '@d-fischer/isomorphic-ws@7.0.2(ws@8.21.0)':
     dependencies:
-      ws: 8.20.0
+      ws: 8.21.0
 
   '@d-fischer/logger@4.2.4':
     dependencies:
@@ -8506,7 +8525,7 @@ snapshots:
       nopt: 5.0.0
       npmlog: 5.0.1
       rimraf: 3.0.2
-      semver: 7.8.0
+      semver: 7.8.1
       tar: 7.5.11
     transitivePeerDependencies:
       - encoding
@@ -8516,7 +8535,7 @@ snapshots:
   '@discordjs/opus@0.10.0':
     dependencies:
       '@discordjs/node-pre-gyp': 0.4.5
-      node-addon-api: 8.7.0
+      node-addon-api: 8.8.0
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -8528,7 +8547,7 @@ snapshots:
       discord-api-types: 0.38.42
       prism-media: 1.3.5(@discordjs/opus@0.10.0)(opusscript@0.1.1)
       tslib: 2.8.1
-      ws: 8.20.0
+      ws: 8.19.0
     transitivePeerDependencies:
       - '@discordjs/opus'
       - bufferutil
@@ -8545,7 +8564,7 @@ snapshots:
       discord-api-types: 0.38.42
       prism-media: 1.3.5(@discordjs/opus@0.10.0)(opusscript@0.1.1)
       tslib: 2.8.1
-      ws: 8.20.0
+      ws: 8.20.1
     transitivePeerDependencies:
       - '@discordjs/opus'
       - bufferutil
@@ -8676,7 +8695,7 @@ snapshots:
       google-auth-library: 10.6.2
       p-retry: 4.6.2
       protobufjs: 7.5.4
-      ws: 8.20.0
+      ws: 8.20.1
     optionalDependencies:
       '@modelcontextprotocol/sdk': 1.28.0(zod@4.3.6)
     transitivePeerDependencies:
@@ -8705,7 +8724,7 @@ snapshots:
     dependencies:
       lodash.camelcase: 4.3.0
       long: 5.3.2
-      protobufjs: 7.6.0
+      protobufjs: 7.6.1
       yargs: 17.7.2
 
   '@hapi/boom@9.1.4':
@@ -9161,7 +9180,7 @@ snapshots:
       lodash.pickby: 4.6.0
       protobufjs: 7.5.4
       qs: 6.14.2
-      ws: 8.20.0
+      ws: 8.20.1
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9281,9 +9300,9 @@ snapshots:
       std-env: 3.10.0
       yoctocolors: 2.1.2
 
-  '@mariozechner/pi-agent-core@0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)':
+  '@mariozechner/pi-agent-core@0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.20.1)(zod@4.3.6)':
     dependencies:
-      '@mariozechner/pi-ai': 0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
+      '@mariozechner/pi-ai': 0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.20.1)(zod@4.3.6)
     transitivePeerDependencies:
       - '@modelcontextprotocol/sdk'
       - aws-crt
@@ -9293,7 +9312,7 @@ snapshots:
       - ws
       - zod
 
-  '@mariozechner/pi-ai@0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)':
+  '@mariozechner/pi-ai@0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.20.1)(zod@4.3.6)':
     dependencies:
       '@anthropic-ai/sdk': 0.73.0(zod@4.3.6)
       '@aws-sdk/client-bedrock-runtime': 3.1004.0
@@ -9303,7 +9322,7 @@ snapshots:
       ajv: 8.18.0
       ajv-formats: 3.0.1(ajv@8.18.0)
       chalk: 5.6.2
-      openai: 6.26.0(ws@8.19.0)(zod@4.3.6)
+      openai: 6.26.0(ws@8.20.1)(zod@4.3.6)
       partial-json: 0.1.7
       proxy-agent: 6.5.0
       undici: 7.24.0
@@ -9317,11 +9336,11 @@ snapshots:
       - ws
       - zod
 
-  '@mariozechner/pi-coding-agent@0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)':
+  '@mariozechner/pi-coding-agent@0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.20.1)(zod@4.3.6)':
     dependencies:
       '@mariozechner/jiti': 2.6.5
-      '@mariozechner/pi-agent-core': 0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
-      '@mariozechner/pi-ai': 0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
+      '@mariozechner/pi-agent-core': 0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.20.1)(zod@4.3.6)
+      '@mariozechner/pi-ai': 0.57.1(@modelcontextprotocol/sdk@1.28.0(zod@4.3.6))(ws@8.20.1)(zod@4.3.6)
       '@mariozechner/pi-tui': 0.57.1
       '@silvia-odwyer/photon-node': 0.3.4
       chalk: 5.6.2
@@ -9413,7 +9432,7 @@ snapshots:
 
   '@mistralai/mistralai@1.14.1':
     dependencies:
-      ws: 8.20.0
+      ws: 8.20.1
       zod: 4.3.6
       zod-to-json-schema: 3.25.1(zod@4.3.6)
     transitivePeerDependencies:
@@ -10208,6 +10227,8 @@ snapshots:
 
   '@protobufjs/eventemitter@1.1.0': {}
 
+  '@protobufjs/eventemitter@1.1.1': {}
+
   '@protobufjs/fetch@1.1.0':
     dependencies:
       '@protobufjs/aspromise': 1.1.2
@@ -10545,7 +10566,7 @@ snapshots:
       '@types/node': 25.4.0
       '@types/ws': 8.18.1
       eventemitter3: 5.0.4
-      ws: 8.20.0
+      ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -11244,12 +11265,12 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@thi.ng/bitstream@2.4.49':
+  '@thi.ng/bitstream@2.4.51':
     dependencies:
-      '@thi.ng/errors': 2.6.11
+      '@thi.ng/errors': 2.6.13
     optional: true
 
-  '@thi.ng/errors@2.6.11':
+  '@thi.ng/errors@2.6.13':
     optional: true
 
   '@tinyhttp/content-disposition@2.2.4': {}
@@ -11541,7 +11562,7 @@ snapshots:
       sirv: 3.0.2
       tinyrainbow: 3.1.0
       vitest: 4.0.18(@opentelemetry/api@1.9.1)(@types/node@25.4.0)(@vitest/browser-playwright@4.0.18)(jiti@2.6.1)(jsdom@29.0.1(@noble/hashes@2.0.1))(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)
-      ws: 8.20.1
+      ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -11559,7 +11580,7 @@ snapshots:
       sirv: 3.0.2
       tinyrainbow: 3.1.0
       vitest: 4.1.2(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(@vitest/browser-playwright@4.1.2)(jsdom@29.0.1(@noble/hashes@2.0.1))(vite@8.0.5(@emnapi/core@1.8.1)(@emnapi/runtime@1.8.1)(@types/node@25.9.1)(esbuild@0.27.3)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.9.0))
-      ws: 8.20.0
+      ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -11697,7 +11718,7 @@ snapshots:
       pino: 9.14.0
       protobufjs: 7.5.4
       sharp: 0.34.5
-      ws: 8.20.0
+      ws: 8.21.0
     optionalDependencies:
       audio-decode: 2.2.3
       jimp: 1.6.0
@@ -13159,7 +13180,7 @@ snapshots:
   libsignal@https://codeload.github.com/whiskeysockets/libsignal-node/tar.gz/bcea72df9ec34d9d9140ab30619cf479c7c144c7:
     dependencies:
       curve25519-js: 0.0.4
-      protobufjs: 7.6.0
+      protobufjs: 7.6.1
 
   lie@3.3.0:
     dependencies:
@@ -13484,7 +13505,7 @@ snapshots:
 
   node-addon-api@8.6.0: {}
 
-  node-addon-api@8.7.0:
+  node-addon-api@8.8.0:
     optional: true
 
   node-api-headers@1.8.0: {}
@@ -13494,7 +13515,7 @@ snapshots:
   node-edge-tts@1.2.10:
     dependencies:
       https-proxy-agent: 7.0.6
-      ws: 8.20.0
+      ws: 8.21.0
       yargs: 17.7.2
     transitivePeerDependencies:
       - bufferutil
@@ -13666,14 +13687,14 @@ snapshots:
       regex: 6.1.0
       regex-recursion: 6.0.2
 
-  openai@6.26.0(ws@8.19.0)(zod@4.3.6):
-    optionalDependencies:
-      ws: 8.19.0
-      zod: 4.3.6
-
-  openai@6.33.0(ws@8.20.1)(zod@4.4.3):
+  openai@6.26.0(ws@8.20.1)(zod@4.3.6):
     optionalDependencies:
       ws: 8.20.1
+      zod: 4.3.6
+
+  openai@6.33.0(ws@8.21.0)(zod@4.4.3):
+    optionalDependencies:
+      ws: 8.21.0
       zod: 4.4.3
 
   opus-decoder@0.7.11:
@@ -13956,12 +13977,12 @@ snapshots:
       '@types/node': 25.4.0
       long: 5.3.2
 
-  protobufjs@7.6.0:
+  protobufjs@7.6.1:
     dependencies:
       '@protobufjs/aspromise': 1.1.2
       '@protobufjs/base64': 1.1.2
       '@protobufjs/codegen': 2.0.5
-      '@protobufjs/eventemitter': 1.1.0
+      '@protobufjs/eventemitter': 1.1.1
       '@protobufjs/fetch': 1.1.1
       '@protobufjs/float': 1.0.2
       '@protobufjs/inquire': 1.1.2
@@ -14079,7 +14100,7 @@ snapshots:
 
   qoa-format@1.0.1:
     dependencies:
-      '@thi.ng/bitstream': 2.4.49
+      '@thi.ng/bitstream': 2.4.51
     optional: true
 
   qrcode-terminal@0.12.0: {}
@@ -14324,7 +14345,7 @@ snapshots:
 
   semver@7.7.4: {}
 
-  semver@7.8.0:
+  semver@7.8.1:
     optional: true
 
   send@1.2.1:
@@ -15058,12 +15079,14 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  ws@8.19.0: {}
+  ws@8.19.0:
+    optional: true
 
   ws@8.20.0: {}
 
-  ws@8.20.1:
-    optional: true
+  ws@8.20.1: {}
+
+  ws@8.21.0: {}
 
   xml-name-validator@5.0.0: {}
 
@@ -15128,7 +15151,7 @@ snapshots:
       semver: 7.7.4
       spark-md5: 3.0.2
       tough-cookie: 4.1.3
-      ws: 8.20.0
+      ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
