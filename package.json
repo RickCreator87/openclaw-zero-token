@@ -1192,7 +1192,7 @@
     "@sinclair/typebox": "0.34.48",
     "@slack/bolt": "^4.6.0",
     "@slack/web-api": "^7.14.1",
-    "@whiskeysockets/baileys": "7.0.0-rc.9",
+    "@whiskeysockets/baileys": "7.0.0-rc12",
     "ajv": "^8.18.0",
     "chalk": "^5.6.2",
     "chokidar": "^5.0.0",
@@ -1204,7 +1204,7 @@
     "express": "^5.2.1",
     "file-type": "^21.3.1",
     "grammy": "^1.41.1",
-    "hono": "4.12.18",
+    "hono": "4.12.21",
     "https-proxy-agent": "^8.0.0",
     "ipaddr.js": "^2.3.0",
     "jiti": "^2.6.1",
@@ -1261,7 +1261,7 @@
   "pnpm": {
     "minimumReleaseAge": 2880,
     "overrides": {
-      "hono": "4.12.18",
+      "hono": "4.12.21",
       "@hono/node-server": "1.19.10",
       "fast-xml-parser": "5.3.8",
       "request": "npm:@cypress/request@3.0.10",
