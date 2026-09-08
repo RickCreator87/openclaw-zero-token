@@ -12339,8 +12339,6 @@ snapshots:
       protobufjs: 7.6.5
       sharp: 0.35.3(@types/node@25.4.0)
       whatsapp-rust-bridge: 0.5.4
-      protobufjs: 7.5.4
-      sharp: 0.35.3(@types/node@25.4.0)
       ws: 8.21.1
     optionalDependencies:
       audio-decode: 2.2.3
