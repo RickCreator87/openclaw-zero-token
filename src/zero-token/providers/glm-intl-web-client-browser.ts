@@ -1,8 +1,14 @@
 import crypto from "node:crypto";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright-core";
 import { getHeadersWithAuth } from "../../../extensions/browser/src/browser/cdp.helpers.js";
-import { getChromeWebSocketUrl, launchOpenClawChrome } from "../../../extensions/browser/src/browser/chrome.js";
-import { resolveBrowserConfig, resolveProfile } from "../../../extensions/browser/src/browser/config.js";
+import {
+  getChromeWebSocketUrl,
+  launchOpenClawChrome,
+} from "../../../extensions/browser/src/browser/chrome.js";
+import {
+  resolveBrowserConfig,
+  resolveProfile,
+} from "../../../extensions/browser/src/browser/config.js";
 import { loadConfig } from "../../config/io.js";
 
 export interface GlmIntlWebClientOptions {

@@ -61,9 +61,5 @@
     "src/plugin-sdk/askonce.ts",
     "src/types/**/*.d.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "src/**/*.test.ts"
-  ]
+  "exclude": ["node_modules", "dist", "src/**/*.test.ts"]
 }

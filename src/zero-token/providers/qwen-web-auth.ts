@@ -5,7 +5,10 @@ import {
   stopOpenClawChrome,
   getChromeWebSocketUrl,
 } from "../../../extensions/browser/src/browser/chrome.js";
-import { resolveBrowserConfig, resolveProfile } from "../../../extensions/browser/src/browser/config.js";
+import {
+  resolveBrowserConfig,
+  resolveProfile,
+} from "../../../extensions/browser/src/browser/config.js";
 import { loadConfig } from "../../config/io.js";
 
 export interface QwenWebAuth {

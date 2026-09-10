@@ -3,9 +3,9 @@
 > **用途**：固化已确认的目标与约束，便于迭代、评审和与上游 OpenClaw 对齐时对照。  
 > **语言**：正文以中文为主；文末附简短 English summary。
 
-| 字段     | 值        |
-| -------- | --------- |
-| 状态     | 已确认    |
+| 字段     | 值                                                                                 |
+| -------- | ---------------------------------------------------------------------------------- |
+| 状态     | 已确认                                                                             |
 | 最近更新 | 2026-03-28（实施计划见 `docs/zero-token/plans/2026-03-28-zero-token-refactor.md`） |
 
 ---
@@ -69,20 +69,20 @@
 
 ## 6. 变更记录
 
-| 日期       | 说明 |
-| ---------- | ---- |
-| 2026-03-28 | 初稿：与用户确认的五点需求（Web 模型免 API Key、插件化减 fork 冲突、浏览器登录态优化、调用面定义、端到端链路） |
-| 2026-03-28 | Superpowers 实施计划：`docs/zero-token/plans/2026-03-28-zero-token-refactor.md`；浏览器模式说明：`docs/zero-token/web-models-browser-modes.md`；上游同步清单：`docs/zero-token/upstream-sync.md`；Web 流式注册表在 `src/zero-token/streams/web-stream-factories.ts`（`src/agents/web-stream-factories.ts` 为 re-export） |
-| 2026-03-28 | **bb-browser PoC（文档结论）**：CLI 可用；适配器面向站外结构化数据，**不**替代 11 个 Web 聊天 Provider；摘要见 `docs/zero-token/web-models-browser-modes.md`「bb-browser PoC 摘要」；不默认加入 `package.json` 依赖。 |
-| 2026-03-28 | 计划收尾：README「与上游同步」链至 `docs/zero-token/upstream-sync.md`；`hooks.model-override-wiring` 通过；修复 `compact.hooks.test.ts` 的 `INTERNAL_MESSAGE_CHANNEL` mock；移除 `attempt.test.ts` 中对已删除之 `wrapStreamFnRepairMalformedToolCallArguments` 的用例。 |
-| 2026-03-28 | `compactEmbeddedPiSession`：当 `contextEngine.info.ownsCompaction` 为真时，在调用 `contextEngine.compact` 前后触发 `before_compaction` / `after_compaction`（`messageCount`/`compactedCount` 哨兵为 `-1`，与 `compact.hooks.test.ts` 约定一致）。 |
-| 2026-03-28 | **目录收拢**：Web 模型实现迁至 **`src/zero-token/providers/`** 与 **`src/zero-token/streams/`**；`src/agents/web-stream-factories.ts` 仅为 re-export；移除冗余 **`extensions/web-models`** 与 **`src/plugin-sdk/web-models.ts`**；`extensions/askonce` 适配器改为引用仓库内 `src/zero-token/streams/*`。 |
-| 2026-03-28 | **AskOnce**：插件目录迁至 **`src/zero-token/extensions/askonce/`**；`resolveBundledPluginSearchDirs` 同时扫描 `extensions/` 与 **`src/zero-token/extensions/`**。 |
-| 2026-03-28 | **`models-config` 抽桥**：Web 常量、`discover*WebModels`、`build*WebProvider` 迁至 **`src/zero-token/bridge/web-providers.ts`**；`models-config.providers.ts` 负责 import、`resolveImplicitProviders` 合并，并 **re-export** 原符号以保持 `onboard-auth.config-core` 等既有 import 路径不变。 |
+| 日期       | 说明                                                                                                                                                                                                                                                                                                                                                                |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-03-28 | 初稿：与用户确认的五点需求（Web 模型免 API Key、插件化减 fork 冲突、浏览器登录态优化、调用面定义、端到端链路）                                                                                                                                                                                                                                                      |
+| 2026-03-28 | Superpowers 实施计划：`docs/zero-token/plans/2026-03-28-zero-token-refactor.md`；浏览器模式说明：`docs/zero-token/web-models-browser-modes.md`；上游同步清单：`docs/zero-token/upstream-sync.md`；Web 流式注册表在 `src/zero-token/streams/web-stream-factories.ts`（`src/agents/web-stream-factories.ts` 为 re-export）                                            |
+| 2026-03-28 | **bb-browser PoC（文档结论）**：CLI 可用；适配器面向站外结构化数据，**不**替代 11 个 Web 聊天 Provider；摘要见 `docs/zero-token/web-models-browser-modes.md`「bb-browser PoC 摘要」；不默认加入 `package.json` 依赖。                                                                                                                                               |
+| 2026-03-28 | 计划收尾：README「与上游同步」链至 `docs/zero-token/upstream-sync.md`；`hooks.model-override-wiring` 通过；修复 `compact.hooks.test.ts` 的 `INTERNAL_MESSAGE_CHANNEL` mock；移除 `attempt.test.ts` 中对已删除之 `wrapStreamFnRepairMalformedToolCallArguments` 的用例。                                                                                             |
+| 2026-03-28 | `compactEmbeddedPiSession`：当 `contextEngine.info.ownsCompaction` 为真时，在调用 `contextEngine.compact` 前后触发 `before_compaction` / `after_compaction`（`messageCount`/`compactedCount` 哨兵为 `-1`，与 `compact.hooks.test.ts` 约定一致）。                                                                                                                   |
+| 2026-03-28 | **目录收拢**：Web 模型实现迁至 **`src/zero-token/providers/`** 与 **`src/zero-token/streams/`**；`src/agents/web-stream-factories.ts` 仅为 re-export；移除冗余 **`extensions/web-models`** 与 **`src/plugin-sdk/web-models.ts`**；`extensions/askonce` 适配器改为引用仓库内 `src/zero-token/streams/*`。                                                            |
+| 2026-03-28 | **AskOnce**：插件目录迁至 **`src/zero-token/extensions/askonce/`**；`resolveBundledPluginSearchDirs` 同时扫描 `extensions/` 与 **`src/zero-token/extensions/`**。                                                                                                                                                                                                   |
+| 2026-03-28 | **`models-config` 抽桥**：Web 常量、`discover*WebModels`、`build*WebProvider` 迁至 **`src/zero-token/bridge/web-providers.ts`**；`models-config.providers.ts` 负责 import、`resolveImplicitProviders` 合并，并 **re-export** 原符号以保持 `onboard-auth.config-core` 等既有 import 路径不变。                                                                       |
 | 2026-03-28 | **补齐 Web 接线**：`perplexity-web` / `qwen-cn-web` 注册进 **`web-stream-factories`** 与 **`resolveImplicitProviders`**；新增 **`buildPerplexityWebProvider`**；`glm-intl-web` 与其它 Web 渠道同为无条件合并；**`docs/zero-token/upstream-sync.md`** 与当前目录对齐；**`release-check`** 对捆绑扩展按 id 去重；**`discovery`** 注释说明 bundled 扫描会 chmod 目录。 |
-| 2026-03-28 | **文档目录**：Zero Token 专用说明收拢至 **`docs/zero-token/`**（索引见 `docs/zero-token/index.md`）；原 `docs/` 根路径同名页在 Mintlify 增加 **redirect** 至新路径。 |
+| 2026-03-28 | **文档目录**：Zero Token 专用说明收拢至 **`docs/zero-token/`**（索引见 `docs/zero-token/index.md`）；原 `docs/` 根路径同名页在 Mintlify 增加 **redirect** 至新路径。                                                                                                                                                                                                |
 
-*后续优化（例如选定「调试 Chrome / 扩展桥」最终方案、迁移某 Provider 出 core）请在本表追加一行。*
+_后续优化（例如选定「调试 Chrome / 扩展桥」最终方案、迁移某 Provider 出 core）请在本表追加一行。_
 
 ---
 

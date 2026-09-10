@@ -30,12 +30,12 @@ Web 模型实现集中在 **`src/zero-token/`**，与 OpenClaw 核心其它区�
 
 ### 核心文件
 
-| 文件                                         | 说明                                |
-| -------------------------------------------- | ----------------------------------- |
-| `src/zero-token/providers/*.ts`              | 浏览器客户端与 Web 登录辅助          |
-| `src/zero-token/streams/*.ts`                | Web 流式工厂与注册表                 |
-| `src/agents/web-stream-factories.ts`         | 对 `zero-token/streams` 的稳定 re-export |
-| `src/agents/models-config.providers.ts`      | 隐式 provider 合并（含 Web 段）        |
+| 文件                                    | 说明                                     |
+| --------------------------------------- | ---------------------------------------- |
+| `src/zero-token/providers/*.ts`         | 浏览器客户端与 Web 登录辅助              |
+| `src/zero-token/streams/*.ts`           | Web 流式工厂与注册表                     |
+| `src/agents/web-stream-factories.ts`    | 对 `zero-token/streams` 的稳定 re-export |
+| `src/agents/models-config.providers.ts` | 隐式 provider 合并（含 Web 段）          |
 
 ### 支持的 Provider
 

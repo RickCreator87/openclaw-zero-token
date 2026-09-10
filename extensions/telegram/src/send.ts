@@ -34,6 +34,7 @@ import {
   isSafeToRetrySendError,
   isTelegramServerError,
 } from "./network-errors.js";
+import { normalizeTelegramReplyToMessageId } from "./outbound-params.js";
 import { makeProxyFetch } from "./proxy.js";
 import { recordSentMessage } from "./sent-message-cache.js";
 import { maybePersistResolvedTelegramTarget } from "./target-writeback.js";
@@ -42,7 +43,6 @@ import {
   normalizeTelegramLookupTarget,
   parseTelegramTarget,
 } from "./targets.js";
-import { normalizeTelegramReplyToMessageId } from "./outbound-params.js";
 import { resolveTelegramVoiceSend } from "./voice.js";
 
 type TelegramApi = Bot["api"];

@@ -51,21 +51,21 @@ const askoncePlugin = {
     api.registerCli(
       (ctx) => {
         ctx.program
-        .command("askonce [question...]")
-        .alias("ask")
-        .description("一次提问，获取所有大模型答案")
-        .option("-m, --models <models>", "指定模型 (逗号分隔)", "")
-        .option("-t, --timeout <ms>", "超时时间 (毫秒)", "60000")
-        .option("-o, --output <format>", "输出格式 (console/markdown/json)", "console")
-        .option("-f, --file <path>", "导出文件路径")
-        .option("-s, --stream", "启用流式输出", false)
-        .option("-l, --list", "列出所有可用模型", false)
-        .allowUnknownOption()
-        .action(async (question: string[] | undefined, options) => {
-          await runAskOnce(ctx.program, options, question);
-        });
+          .command("askonce [question...]")
+          .alias("ask")
+          .description("一次提问，获取所有大模型答案")
+          .option("-m, --models <models>", "指定模型 (逗号分隔)", "")
+          .option("-t, --timeout <ms>", "超时时间 (毫秒)", "60000")
+          .option("-o, --output <format>", "输出格式 (console/markdown/json)", "console")
+          .option("-f, --file <path>", "导出文件路径")
+          .option("-s, --stream", "启用流式输出", false)
+          .option("-l, --list", "列出所有可用模型", false)
+          .allowUnknownOption()
+          .action(async (question: string[] | undefined, options) => {
+            await runAskOnce(ctx.program, options, question);
+          });
       },
-      { commands: ["askonce", "ask"] }
+      { commands: ["askonce", "ask"] },
     );
   },
 };

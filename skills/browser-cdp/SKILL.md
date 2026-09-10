@@ -1,13 +1,7 @@
 ---
 name: browser-cdp
 description: "Control a browser via Chrome DevTools Protocol (CDP) proxy. Use when: (1) navigating to URLs and reading page content, (2) taking screenshots, (3) executing JavaScript in the browser, (4) clicking elements or filling forms, (5) searching and installing Chrome Web Store extensions, (6) interacting with web APIs that require a real browser. NOT for: simple HTTP requests (use curl), local file operations, or when no CDP proxy is available."
-metadata:
-  {
-    "openclaw": {
-      "emoji": "🌐",
-      "requires": { "bins": ["curl"] }
-    }
-  }
+metadata: { "openclaw": { "emoji": "🌐", "requires": { "bins": ["curl"] } } }
 ---
 
 # Browser CDP
@@ -66,10 +60,9 @@ curl -s http://localhost:3456/targets | python3 -m json.tool
 ```
 
 Response:
+
 ```json
-[
-  { "id": "ABC123", "title": "Google", "url": "https://google.com" }
-]
+[{ "id": "ABC123", "title": "Google", "url": "https://google.com" }]
 ```
 
 ### GET /navigate?url=<URL>
@@ -124,6 +117,7 @@ curl -s http://localhost:3456/new
 ```
 
 Response:
+
 ```json
 { "id": "NEW_TAB_ID", "title": "about:blank", "url": "about:blank" }
 ```

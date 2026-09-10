@@ -447,7 +447,10 @@ function splitTelegramChunkByHtmlLimit(chunk: MarkdownIR, htmlLimit: number): Ma
   if (firstChunk && renderTelegramChunkHtml(firstChunk).length <= htmlLimit) {
     return split;
   }
-  return [sliceMarkdownIR(chunk, 0, splitLimit), sliceMarkdownIR(chunk, splitLimit, currentTextLength)];
+  return [
+    sliceMarkdownIR(chunk, 0, splitLimit),
+    sliceMarkdownIR(chunk, splitLimit, currentTextLength),
+  ];
 }
 
 function sliceStyleSpans(

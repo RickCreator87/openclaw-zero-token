@@ -16,21 +16,22 @@
 
 ## 文件结构（本计划涉及）
 
-| 路径 | 职责 |
-|------|------|
-| `src/agents/web-stream-factories.ts`（新建） | 集中导出 `getWebStreamFactory(api)` 与各 Web 流式工厂 |
-| `src/agents/web-stream-factories.test.ts`（新建） | 校验注册表完整性与工厂可调用 |
-| `src/agents/pi-embedded-runner/run/attempt.ts` | 用 `getWebStreamFactory` 替换 11 段 `else if` |
-| `src/agents/pi-embedded-runner/compact.ts` | 同上，保持与 attempt 行为一致 |
-| `docs/zero-token/upstream-sync.md`（新建） | Zero Token 改动面清单与同步步骤 |
-| `docs/zero-token/web-models-browser-modes.md`（新建） | 浏览器模式 A/B/C 与约束说明 |
-| `docs/zero-token/zero-token-requirements.md` | 追加变更记录行指向本计划 |
+| 路径                                                  | 职责                                                  |
+| ----------------------------------------------------- | ----------------------------------------------------- |
+| `src/agents/web-stream-factories.ts`（新建）          | 集中导出 `getWebStreamFactory(api)` 与各 Web 流式工厂 |
+| `src/agents/web-stream-factories.test.ts`（新建）     | 校验注册表完整性与工厂可调用                          |
+| `src/agents/pi-embedded-runner/run/attempt.ts`        | 用 `getWebStreamFactory` 替换 11 段 `else if`         |
+| `src/agents/pi-embedded-runner/compact.ts`            | 同上，保持与 attempt 行为一致                         |
+| `docs/zero-token/upstream-sync.md`（新建）            | Zero Token 改动面清单与同步步骤                       |
+| `docs/zero-token/web-models-browser-modes.md`（新建） | 浏览器模式 A/B/C 与约束说明                           |
+| `docs/zero-token/zero-token-requirements.md`          | 追加变更记录行指向本计划                              |
 
 ---
 
 ### Task 1: 上游同步说明文档
 
 **Files:**
+
 - Create: `docs/zero-token/upstream-sync.md`
 
 - [x] **Step 1: 写入文档正文**
@@ -97,6 +98,7 @@ git commit -m "docs: add upstream sync playbook for zero-token"
 ### Task 2: Web 流式工厂模块 + 单测
 
 **Files:**
+
 - Create: `src/agents/web-stream-factories.ts`
 - Create: `src/agents/web-stream-factories.test.ts`
 
@@ -199,13 +201,14 @@ git commit -m "agents: centralize web stream factories registry"
 ### Task 3: 重构 `attempt.ts`
 
 **Files:**
+
 - Modify: `src/agents/pi-embedded-runner/run/attempt.ts`
 
 - [x] **Step 1: 调整 import**
 
 删除以下单独 import（若仅被 Web 分支使用）：
 
-- `createChatGPTWebStreamFn` … `createXiaomiMimoWebStreamFn`（共 11 个 create*WebStreamFn）
+- `createChatGPTWebStreamFn` … `createXiaomiMimoWebStreamFn`（共 11 个 create\*WebStreamFn）
 
 新增：
 
@@ -264,6 +267,7 @@ git commit -m "agents: route web stream via getWebStreamFactory in attempt"
 ### Task 4: 重构 `compact.ts`
 
 **Files:**
+
 - Modify: `src/agents/pi-embedded-runner/compact.ts`
 
 - [x] **Step 1: 调整 import**
@@ -291,10 +295,10 @@ import { getWebStreamFactory } from "../web-stream-factories.js";
 替换为：
 
 ```typescript
-        const webFactory = getWebStreamFactory(model.api);
-        if (webFactory) {
-          streamFn = webFactory(resolvedApiKey);
-        }
+const webFactory = getWebStreamFactory(model.api);
+if (webFactory) {
+  streamFn = webFactory(resolvedApiKey);
+}
 ```
 
 - [x] **Step 3: 运行测试**
@@ -314,6 +318,7 @@ git commit -m "agents: route web stream via getWebStreamFactory in compact"
 ### Task 5: 浏览器模式文档
 
 **Files:**
+
 - Create: `docs/zero-token/web-models-browser-modes.md`
 - Modify: `docs/zero-token/zero-token-requirements.md`（变更记录）
 
@@ -339,6 +344,7 @@ git commit -m "docs: web browser modes for CDP and profiles"
 ### Task 6（后续 / 可选）: bb-browser PoC 记录
 
 **Files:**
+
 - Modify: `docs/zero-token/zero-token-requirements.md`
 
 - [x] 在本地验证 `bb-browser site <adapter> --openclaw` 是否满足某一站点需求；将结论（可用 / 不可用 / 缺口）写入需求文档变更记录。**本任务不修改 `package.json` 依赖，除非 PoC 通过后另开 PR。**（已完成：`npx bb-browser --help` 验证 CLI；结论文档化于 `docs/zero-token/web-models-browser-modes.md` 与 `docs/zero-token/zero-token-requirements.md`。）
@@ -347,12 +353,12 @@ git commit -m "docs: web browser modes for CDP and profiles"
 
 ## Spec 对照自检
 
-| `docs/zero-token/zero-token-requirements.md` 章节 | 对应任务 |
-|----------------------------------------|----------|
-| §1 目标能力 / 端到端 | Task 2–4 保持行为等价 |
-| §2 减少 core 入侵 | Task 2–4 收敛热点；Task 1 文档化其余改动面 |
-| §3 浏览器授权 | Task 5（及可选 Task 6） |
-| §4 Web 模型目录 | 实现已收拢至 `src/zero-token/`；`models-config` 大段仍可在后续继续变薄 |
+| `docs/zero-token/zero-token-requirements.md` 章节 | 对应任务                                                               |
+| ------------------------------------------------- | ---------------------------------------------------------------------- |
+| §1 目标能力 / 端到端                              | Task 2–4 保持行为等价                                                  |
+| §2 减少 core 入侵                                 | Task 2–4 收敛热点；Task 1 文档化其余改动面                             |
+| §3 浏览器授权                                     | Task 5（及可选 Task 6）                                                |
+| §4 Web 模型目录                                   | 实现已收拢至 `src/zero-token/`；`models-config` 大段仍可在后续继续变薄 |
 
 ## 计划自检
 
@@ -363,12 +369,12 @@ git commit -m "docs: web browser modes for CDP and profiles"
 
 ## 验证记录（2026-03-28）
 
-| 命令 | 结果 |
-|------|------|
-| `pnpm exec vitest run src/zero-token/streams/web-stream-factories.test.ts` | PASS |
-| `pnpm exec vitest run src/plugins/hooks.model-override-wiring.test.ts` | PASS |
+| 命令                                                                                                                         | 结果                                                                                                                                                                           |
+| ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pnpm exec vitest run src/zero-token/streams/web-stream-factories.test.ts`                                                   | PASS                                                                                                                                                                           |
+| `pnpm exec vitest run src/plugins/hooks.model-override-wiring.test.ts`                                                       | PASS                                                                                                                                                                           |
 | `pnpm exec vitest run src/agents/pi-embedded-runner/run/attempt.test.ts src/agents/pi-embedded-runner/compact.hooks.test.ts` | PASS（已移除对已删除导出之测试；已修复 `compact.hooks` 的 message-channel mock；`compactEmbeddedPiSession` 在 `ownsCompaction` 引擎路径补全 before/after_compaction 哨兵钩子） |
-| `pnpm build` | PASS（依赖完整安装后） |
-| `npx -y bb-browser --help` | CLI 可用（Task 6 文档结论依据） |
+| `pnpm build`                                                                                                                 | PASS（依赖完整安装后）                                                                                                                                                         |
+| `npx -y bb-browser --help`                                                                                                   | CLI 可用（Task 6 文档结论依据）                                                                                                                                                |
 
 **计划文件：** `docs/zero-token/plans/2026-03-28-zero-token-refactor.md`（Task 1–6 步骤已全部勾选完成）。
