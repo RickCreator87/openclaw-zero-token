@@ -15,3 +15,13 @@ rules:
   # Disable artipacked (persist-credentials) - low confidence finding
   artipacked:
     disable: true
+
+  # Labelling a pull request from a fork needs a token the fork's own run cannot
+  # have, which is what pull_request_target is for. Both workflows only call the
+  # GitHub API through pinned actions and never check out or execute the pull
+  # request's code, so the escalation this rule guards against has no path here.
+  # Scope the exemption to these two files rather than disabling the rule.
+  dangerous-triggers:
+    ignore:
+      - auto-response.yml
+      - labeler.yml
