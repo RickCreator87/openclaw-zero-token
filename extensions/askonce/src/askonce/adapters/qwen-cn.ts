@@ -2,6 +2,7 @@
  * Qwen CN (通义千问中国版) Web 适配器
  */
 
+import { randomUUID } from "node:crypto";
 import {
   ensureAuthProfileStore,
   listProfilesForProvider,
@@ -84,7 +85,7 @@ export class QwenCNAdapter extends BaseAdapter {
         provider: "alibaba",
       };
 
-      const sessionId = `askonce-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const sessionId = `askonce-${randomUUID()}`;
 
       const context = {
         messages: [{ role: "user", content: question }],
