@@ -107,6 +107,7 @@ OpenClaw 本身已有 `web_fetch` 和 `web_search` 工具，但在以下场景�
    ```
 
 4. **重启 Gateway**:
+
    ```bash
    pnpm openclaw gateway run --bind loopback --port 18789 --force
    ```

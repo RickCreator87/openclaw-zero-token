@@ -142,7 +142,7 @@ pnpm openclaw onboard
 
 ## AskOnce 插件
 
-### 概述
+### AskOnce 概述
 
 AskOnce 是一个独立插件，提供一次提问获取所有大模型答案的功能。
 
@@ -184,7 +184,7 @@ pnpm openclaw askonce "你的问题" -o markdown
 pnpm openclaw askonce "你的问题" -o json
 ```
 
-### 与上游同步
+### AskOnce 与上游同步
 
 1. **核心代码**：可直接同步，无需修改
 2. **AskOnce 插件**：`src/zero-token/extensions/askonce/` 与 Web 实现同树维护

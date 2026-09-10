@@ -1,7 +1,7 @@
 # Zero Token 重构实施计划
 
 > **状态（2026-03-28）**：Task 1–6 已全部落地；验证见文末「验证记录」。
-
+>
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 在保持 Web 模型端到端行为不变的前提下，降低与上游 OpenClaw 的合并成本、完善浏览器授权文档，并为后续插件化迁移提供单一注册点。
