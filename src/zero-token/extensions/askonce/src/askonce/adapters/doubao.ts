@@ -6,7 +6,7 @@ import {
   ensureAuthProfileStore,
   listProfilesForProvider,
 } from "../../../../../../agents/auth-profiles.js";
-import { createDoubaoWebStreamFn } from "../../../../streams/doubao-web-stream.js";
+import { createDoubaoWebStreamFn } from "../../../../../streams/doubao-web-stream.js";
 import type { ModelResponse, AdapterQueryOptions } from "../types.js";
 import { BaseAdapter } from "./base.js";
 

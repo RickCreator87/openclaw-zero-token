@@ -6,7 +6,7 @@ import {
   ensureAuthProfileStore,
   listProfilesForProvider,
 } from "../../../../../../agents/auth-profiles.js";
-import { createGrokWebStreamFn } from "../../../../streams/grok-web-stream.js";
+import { createGrokWebStreamFn } from "../../../../../streams/grok-web-stream.js";
 import type { ModelResponse, AdapterQueryOptions } from "../types.js";
 import { BaseAdapter } from "./base.js";
 

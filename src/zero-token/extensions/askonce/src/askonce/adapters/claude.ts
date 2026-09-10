@@ -6,7 +6,7 @@ import {
   ensureAuthProfileStore,
   listProfilesForProvider,
 } from "../../../../../../agents/auth-profiles.js";
-import { createClaudeWebStreamFn } from "../../../../streams/claude-web-stream.js";
+import { createClaudeWebStreamFn } from "../../../../../streams/claude-web-stream.js";
 import type { ModelResponse, AdapterQueryOptions } from "../types.js";
 import { BaseAdapter } from "./base.js";
 export class ClaudeAdapter extends BaseAdapter {

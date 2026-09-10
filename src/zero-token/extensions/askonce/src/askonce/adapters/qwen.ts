@@ -6,7 +6,7 @@ import {
   ensureAuthProfileStore,
   listProfilesForProvider,
 } from "../../../../../../agents/auth-profiles.js";
-import { createQwenWebStreamFn } from "../../../../streams/qwen-web-stream.js";
+import { createQwenWebStreamFn } from "../../../../../streams/qwen-web-stream.js";
 import type { ModelResponse, AdapterQueryOptions } from "../types.js";
 import { BaseAdapter } from "./base.js";
 
