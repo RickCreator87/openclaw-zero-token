@@ -9,7 +9,9 @@
     "skipLibCheck": true,
     "outDir": "dist/plugin-sdk",
     "rootDir": ".",
-    "tsBuildInfoFile": "dist/plugin-sdk/.tsbuildinfo"
+    "tsBuildInfoFile": "dist/plugin-sdk/.tsbuildinfo",
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   },
   "include": [
     "src/plugin-sdk/index.ts",

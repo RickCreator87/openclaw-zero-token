@@ -1173,7 +1173,6 @@
   "dependencies": {
     "@agentclientprotocol/sdk": "0.16.1",
     "@anthropic-ai/vertex-sdk": "^0.14.4",
-    "@modelcontextprotocol/sdk": "1.28.0",
     "@aws-sdk/client-bedrock": "^3.1007.0",
     "@buape/carbon": "0.0.0-beta-20260216184201",
     "@clack/prompts": "^1.1.0",
@@ -1186,8 +1185,9 @@
     "@lydell/node-pty": "1.2.0-beta.3",
     "@mariozechner/pi-agent-core": "0.57.1",
     "@mariozechner/pi-ai": "0.57.1",
-    "@mariozechner/pi-coding-agent": "0.73.1",
+    "@mariozechner/pi-coding-agent": "0.57.1",
     "@mariozechner/pi-tui": "0.57.1",
+    "@modelcontextprotocol/sdk": "1.28.0",
     "@mozilla/readability": "^0.6.0",
     "@sinclair/typebox": "0.34.48",
     "@slack/bolt": "^4.6.0",

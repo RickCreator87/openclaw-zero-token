@@ -2,11 +2,12 @@
  * Kimi Web 适配器
  */
 
+import { randomUUID } from "node:crypto";
 import {
   ensureAuthProfileStore,
   listProfilesForProvider,
 } from "../../../../../../agents/auth-profiles.js";
-import { createKimiWebStreamFn } from "../../../../streams/kimi-web-stream.js";
+import { createKimiWebStreamFn } from "../../../../../streams/kimi-web-stream.js";
 import type { ModelResponse, AdapterQueryOptions } from "../types.js";
 import { BaseAdapter } from "./base.js";
 
@@ -84,7 +85,7 @@ export class KimiAdapter extends BaseAdapter {
         provider: "moonshot",
       };
 
-      const sessionId = `askonce-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const sessionId = `askonce-${randomUUID()}`;
 
       const context = {
         messages: [{ role: "user", content: question }],
@@ -93,7 +94,7 @@ export class KimiAdapter extends BaseAdapter {
         sessionId,
       };
 
-      const stream = streamFn(model as any, context as any, { signal: options?.signal });
+      const stream = await streamFn(model as any, context as any, { signal: options?.signal });
 
       let content = "";
       try {

@@ -11,8 +11,8 @@ import chalk from "chalk";
 import type { Command } from "commander";
 import type { OpenClawPluginApi } from "openclaw/plugin-sdk/askonce";
 import { emptyPluginConfigSchema } from "openclaw/plugin-sdk/askonce";
-import { ConsoleFormatter, MarkdownFormatter, JsonFormatter } from "../askonce/formatters/index.js";
-import { QueryOrchestrator } from "../askonce/query-orchestrator.js";
+import { ConsoleFormatter, MarkdownFormatter, JsonFormatter } from "./askonce/formatters/index.js";
+import { QueryOrchestrator } from "./askonce/query-orchestrator.js";
 
 /**
  * 自动检测并设置 OPENCLAW_STATE_DIR

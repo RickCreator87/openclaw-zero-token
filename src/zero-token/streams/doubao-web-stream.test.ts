@@ -46,13 +46,17 @@ describe("Doubao stream buffer + tag parsing logic", () => {
     }
 
     function flushTextBuffer() {
-      if (!pendingText) {return;}
+      if (!pendingText) {
+        return;
+      }
       emitText(pendingText);
       pendingText = "";
     }
 
     function pushDelta(delta: string) {
-      if (!delta) {return;}
+      if (!delta) {
+        return;
+      }
 
       // Always accumulate into tagBuffer first so checkTags() can detect boundaries.
       tagBuffer += delta;
@@ -204,7 +208,9 @@ describe("Doubao stream buffer + tag parsing logic", () => {
     // the flush were silently dropped. This test sends 25 chars (exceeds
     // threshold) before the tag to verify the fix.
     const lines: string[] = [];
-    for (let i = 0; i < 25; i++) {lines.push("x");}
+    for (let i = 0; i < 25; i++) {
+      lines.push("x");
+    }
     lines.push("<think>");
     lines.push("thinking content");
     lines.push("</think>");
@@ -223,7 +229,9 @@ describe("Doubao stream buffer + tag parsing logic", () => {
   it("collects all text when buffer threshold is hit multiple times", () => {
     const lines: string[] = [];
     // 50 chars in single-char chunks — multiple flush cycles before the tag
-    for (let i = 0; i < 50; i++) {lines.push("x");}
+    for (let i = 0; i < 50; i++) {
+      lines.push("x");
+    }
     lines.push("<think>");
     lines.push("inner");
     lines.push("</think>");

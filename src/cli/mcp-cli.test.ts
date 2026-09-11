@@ -4,9 +4,12 @@ import path from "node:path";
 import { Command } from "commander";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { withTempHome } from "../config/home-env.test-harness.js";
-import { createCliRuntimeCapture } from "./test-runtime-capture.js";
 
-const { defaultRuntime, resetRuntimeCapture } = createCliRuntimeCapture();
+// vi.mock factories are hoisted above the module body, so the capture has to be built in a hoisted block or the factory reads it in its temporal dead zone.
+const { defaultRuntime, resetRuntimeCapture } = await vi.hoisted(async () => {
+  const { createCliRuntimeCapture } = await import("./test-runtime-capture.js");
+  return createCliRuntimeCapture();
+});
 const mockLog = defaultRuntime.log;
 const mockError = defaultRuntime.error;
 const serveOpenClawChannelMcp = vi.fn();

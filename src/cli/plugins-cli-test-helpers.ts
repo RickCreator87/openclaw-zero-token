@@ -38,13 +38,16 @@ vi.mock("../runtime.js", () => ({
   defaultRuntime,
 }));
 
-vi.mock("../config/config.js", () => ({
+// These mocks redirect a few functions each, so the rest of each module has to pass through or anything the CLI pulls in transitively loses its other exports.
+vi.mock("../config/config.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../config/config.js")>()),
   loadConfig: () => loadConfig(),
   readConfigFileSnapshot: (...args: unknown[]) => readConfigFileSnapshot(...args),
   writeConfigFile: (config: OpenClawConfig) => writeConfigFile(config),
 }));
 
-vi.mock("../config/paths.js", () => ({
+vi.mock("../config/paths.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../config/paths.js")>()),
   resolveStateDir: () => resolveStateDir(),
 }));
 

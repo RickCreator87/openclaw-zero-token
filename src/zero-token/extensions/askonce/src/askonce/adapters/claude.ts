@@ -2,11 +2,12 @@
  * Claude Web 适配器
  */
 
+import { randomUUID } from "node:crypto";
 import {
   ensureAuthProfileStore,
   listProfilesForProvider,
 } from "../../../../../../agents/auth-profiles.js";
-import { createClaudeWebStreamFn } from "../../../../streams/claude-web-stream.js";
+import { createClaudeWebStreamFn } from "../../../../../streams/claude-web-stream.js";
 import type { ModelResponse, AdapterQueryOptions } from "../types.js";
 import { BaseAdapter } from "./base.js";
 export class ClaudeAdapter extends BaseAdapter {
@@ -84,7 +85,7 @@ export class ClaudeAdapter extends BaseAdapter {
       };
 
       // Use unique session ID for each query to start a new conversation
-      const sessionId = `askonce-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const sessionId = `askonce-${randomUUID()}`;
 
       const context = {
         messages: [{ role: "user", content: question }],
@@ -93,7 +94,7 @@ export class ClaudeAdapter extends BaseAdapter {
         sessionId, // Pass unique session to force new conversation
       };
 
-      const stream = streamFn(model as any, context as any, { signal: options?.signal });
+      const stream = await streamFn(model as any, context as any, { signal: options?.signal });
 
       // 使用 AsyncIterable 处理流
       let content = "";

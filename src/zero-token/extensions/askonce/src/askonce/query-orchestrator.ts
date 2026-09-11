@@ -4,9 +4,15 @@
  */
 
 import { randomUUID } from "node:crypto";
-import { getAdapterRegistry, type ModelAdapter } from "./adapters/index.js";
+import { getAdapterRegistry } from "./adapters/index.js";
 import { ConcurrentEngine } from "./concurrent-engine.js";
-import type { QueryOptions, QueryResult, ModelResponse, ProgressCallback } from "./types.js";
+import type {
+  ModelAdapter,
+  QueryOptions,
+  QueryResult,
+  ModelResponse,
+  ProgressCallback,
+} from "./types.js";
 
 /**
  * 根据模型 ID 获取适配器

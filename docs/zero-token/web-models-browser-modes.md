@@ -23,13 +23,13 @@
 
 ### bb-browser PoC 摘要（结论性）
 
-| 维度 | 结论 |
-|------|------|
-| CLI 可用性 | `npx bb-browser --help` 可正常展示命令（`site`、`open`、`eval`、`fetch` 等），适合作为 **独立工具** 或 **MCP** 由 Agent 调用。 |
+| 维度                         | 结论                                                                                                                                                                            |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CLI 可用性                   | `npx bb-browser --help` 可正常展示命令（`site`、`open`、`eval`、`fetch` 等），适合作为 **独立工具** 或 **MCP** 由 Agent 调用。                                                  |
 | 与 Zero Token Web 模型的关系 | bb-browser 以 **站点 adapter**（搜索/热榜/结构化拉数）为主；**不能**替代 `src/zero-token/streams/web-stream-factories.ts` 中 11 个 Web 聊天 Provider 的流式对话与工具协议实现。 |
-| `--openclaw` | 文档说明可走 OpenClaw 内置浏览器；与 **本 fork 的 CDP 授权 + `*-web-stream`** 是 **并行能力**，非替换关系。 |
-| 推荐用法 | 需要站外数据时，通过 **工具/MCP** 暴露 `bb-browser`；主对话模型仍走既有 Web Provider。 |
-| 依赖 | **本仓库不默认添加** `bb-browser` 依赖；由用户在环境中 `npm i -g bb-browser` 或 `npx` 按需使用。 |
+| `--openclaw`                 | 文档说明可走 OpenClaw 内置浏览器；与 **本 fork 的 CDP 授权 + `*-web-stream`** 是 **并行能力**，非替换关系。                                                                     |
+| 推荐用法                     | 需要站外数据时，通过 **工具/MCP** 暴露 `bb-browser`；主对话模型仍走既有 Web Provider。                                                                                          |
+| 依赖                         | **本仓库不默认添加** `bb-browser` 依赖；由用户在环境中 `npm i -g bb-browser` 或 `npx` 按需使用。                                                                                |
 
 ## 配置关系小结
 

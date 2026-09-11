@@ -30,12 +30,12 @@ Web 模型实现集中在 **`src/zero-token/`**，与 OpenClaw 核心其它区�
 
 ### 核心文件
 
-| 文件                                         | 说明                                |
-| -------------------------------------------- | ----------------------------------- |
-| `src/zero-token/providers/*.ts`              | 浏览器客户端与 Web 登录辅助          |
-| `src/zero-token/streams/*.ts`                | Web 流式工厂与注册表                 |
-| `src/agents/web-stream-factories.ts`         | 对 `zero-token/streams` 的稳定 re-export |
-| `src/agents/models-config.providers.ts`      | 隐式 provider 合并（含 Web 段）        |
+| 文件                                    | 说明                                     |
+| --------------------------------------- | ---------------------------------------- |
+| `src/zero-token/providers/*.ts`         | 浏览器客户端与 Web 登录辅助              |
+| `src/zero-token/streams/*.ts`           | Web 流式工厂与注册表                     |
+| `src/agents/web-stream-factories.ts`    | 对 `zero-token/streams` 的稳定 re-export |
+| `src/agents/models-config.providers.ts` | 隐式 provider 合并（含 Web 段）          |
 
 ### 支持的 Provider
 
@@ -142,7 +142,7 @@ pnpm openclaw onboard
 
 ## AskOnce 插件
 
-### 概述
+### AskOnce 概述
 
 AskOnce 是一个独立插件，提供一次提问获取所有大模型答案的功能。
 
@@ -184,7 +184,7 @@ pnpm openclaw askonce "你的问题" -o markdown
 pnpm openclaw askonce "你的问题" -o json
 ```
 
-### 与上游同步
+### AskOnce 与上游同步
 
 1. **核心代码**：可直接同步，无需修改
 2. **AskOnce 插件**：`src/zero-token/extensions/askonce/` 与 Web 实现同树维护
