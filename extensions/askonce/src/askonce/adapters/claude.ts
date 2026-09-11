@@ -94,7 +94,7 @@ export class ClaudeAdapter extends BaseAdapter {
         sessionId, // Pass unique session to force new conversation
       };
 
-      const stream = streamFn(model as any, context as any, { signal: options?.signal });
+      const stream = await streamFn(model as any, context as any, { signal: options?.signal });
 
       // 使用 AsyncIterable 处理流
       let content = "";

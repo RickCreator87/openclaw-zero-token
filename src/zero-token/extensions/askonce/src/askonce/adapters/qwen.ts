@@ -95,7 +95,7 @@ export class QwenAdapter extends BaseAdapter {
         sessionId, // Pass unique session to force new conversation
       };
 
-      const stream = streamFn(model as any, context as any, { signal: options?.signal });
+      const stream = await streamFn(model as any, context as any, { signal: options?.signal });
 
       let content = "";
       try {

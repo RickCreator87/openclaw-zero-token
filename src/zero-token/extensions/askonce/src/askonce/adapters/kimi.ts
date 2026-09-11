@@ -94,7 +94,7 @@ export class KimiAdapter extends BaseAdapter {
         sessionId,
       };
 
-      const stream = streamFn(model as any, context as any, { signal: options?.signal });
+      const stream = await streamFn(model as any, context as any, { signal: options?.signal });
 
       let content = "";
       try {
