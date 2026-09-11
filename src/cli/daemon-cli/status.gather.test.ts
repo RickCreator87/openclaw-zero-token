@@ -70,7 +70,8 @@ let cliLoadedConfig: Record<string, unknown> = {
   },
 };
 
-vi.mock("../../config/config.js", () => ({
+vi.mock("../../config/config.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../config/config.js")>()),
   createConfigIO: ({ configPath }: { configPath: string }) => {
     const isDaemon = configPath.includes("/openclaw-daemon/");
     return {

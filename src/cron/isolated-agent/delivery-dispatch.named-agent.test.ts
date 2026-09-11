@@ -5,7 +5,8 @@ import { matchesMessagingToolDeliveryTarget } from "./delivery-dispatch.js";
 vi.mock("../../agents/subagent-announce.js", () => ({
   runSubagentAnnounceFlow: vi.fn(),
 }));
-vi.mock("../../agents/subagent-registry.js", () => ({
+vi.mock("../../agents/subagent-registry.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../agents/subagent-registry.js")>()),
   countActiveDescendantRuns: vi.fn().mockReturnValue(0),
 }));
 

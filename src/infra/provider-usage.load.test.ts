@@ -12,7 +12,8 @@ type ProviderAuth = ProviderUsageAuth<typeof loadProviderUsageSummary>;
 
 const resolveProviderUsageSnapshotWithPlugin = vi.hoisted(() => vi.fn(async () => null));
 
-vi.mock("../plugins/provider-runtime.js", () => ({
+vi.mock("../plugins/provider-runtime.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../plugins/provider-runtime.js")>()),
   resolveProviderUsageSnapshotWithPlugin,
 }));
 

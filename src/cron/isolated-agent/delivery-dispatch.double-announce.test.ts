@@ -19,7 +19,8 @@ vi.mock("../../config/sessions.js", () => ({
   resolveMainSessionKey: vi.fn(() => "global"),
 }));
 
-vi.mock("../../agents/subagent-registry.js", () => ({
+vi.mock("../../agents/subagent-registry.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../agents/subagent-registry.js")>()),
   countActiveDescendantRuns: vi.fn().mockReturnValue(0),
 }));
 

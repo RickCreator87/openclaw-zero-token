@@ -14,6 +14,8 @@
     "CLAUDE.md",
     "docker-compose.yml",
     "dist/",
+    // The config doc baseline is compared byte for byte against what renderConfigDocBaselineStatefile produces, so reformatting it would break that test.
+    "docs/.generated/",
     "docs/_layouts/",
     "node_modules/",
     "patches/",
